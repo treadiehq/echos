@@ -61,8 +61,8 @@ memory:
     language_preference: "TypeScript"
 
 # Example commands to try:
-# npm run run -- "Generate a TypeScript function to sort an array of objects by date"
-# npm run run -- "Create Python code to read a CSV file and calculate statistics"
-# npm run run -- "Write a bash script to backup a directory with timestamps"
-# npm run run -- "Generate SQL to create a users table with proper constraints"
+# npm run echos -- "Generate a TypeScript function to sort an array of objects by date"
+# npm run echos -- "Create Python code to read a CSV file and calculate statistics"
+# npm run echos -- "Write a bash script to backup a directory with timestamps"
+# npm run echos -- "Generate SQL to create a users table with proper constraints"
 

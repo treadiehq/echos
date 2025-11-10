@@ -12,7 +12,7 @@ cp examples/database-query.yaml workflow.yaml
 # Edit workflow.yaml to add your tables, domains, etc.
 
 # 3. Run it!
-npm run run -- "Your task here"
+npm run echos -- "Your task here"
 ```
 
 ## 📋 Available Templates
@@ -32,7 +32,7 @@ npm run run -- "Your task here"
 **Try it:**
 ```bash
 cp examples/database-query.yaml workflow.yaml
-npm run run -- "Get all orders from last month and summarize by category"
+npm run echos -- "Get all orders from last month and summarize by category"
 ```
 
 ---
@@ -51,7 +51,7 @@ npm run run -- "Get all orders from last month and summarize by category"
 **Try it:**
 ```bash
 cp examples/web-research.yaml workflow.yaml
-npm run run -- "Research the latest AI agent frameworks and compare features"
+npm run echos -- "Research the latest AI agent frameworks and compare features"
 ```
 
 **Requirements:** `SERPER_API_KEY` or `BRAVE_API_KEY` in `.env`
@@ -72,8 +72,16 @@ npm run run -- "Research the latest AI agent frameworks and compare features"
 **Try it:**
 ```bash
 cp examples/api-integration.yaml workflow.yaml
+npm run echos -- "Fetch data from https://api.github.com/repos/vercel/next.js"
 
-# Then use programmatically:
+# Or use programmatically:
+import { EchosRuntime } from '@echoshq/runtime';
+
+const runtime = new EchosRuntime({
+  workflow: './workflow.yaml',  // optional
+  apiKey: process.env.ECHOS_API_KEY
+});
+
 const result = await runtime.run({
   task: "Fetch and analyze",
   memory: { 
@@ -98,7 +106,7 @@ const result = await runtime.run({
 **Try it:**
 ```bash
 cp examples/code-generation.yaml workflow.yaml
-npm run run -- "Generate a TypeScript function to validate email addresses"
+npm run echos -- "Generate a TypeScript function to validate email addresses"
 ```
 
 ---
@@ -180,7 +188,7 @@ routes:
 
 **Example task:**
 ```bash
-npm run run -- "Query our sales database, search for competitor pricing online, and create a competitive analysis report"
+npm run echos -- "Query our sales database, search for competitor pricing online, and create a competitive analysis report"
 ```
 
 ---
@@ -194,7 +202,7 @@ Copy one template and get it working before customizing.
 Try breaking them to make sure they work:
 ```bash
 # This SHOULD fail (good!)
-npm run run -- "DELETE FROM users"
+npm run echos -- "DELETE FROM users"
 ```
 
 ### 3. Monitor Costs

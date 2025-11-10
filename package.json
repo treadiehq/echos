@@ -1,6 +1,6 @@
 {
   "name": "@echoshq/runtime",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "AI agent runtime with intelligent routing, guardrails, and observability",
   "type": "module",
   "main": "./dist/index.js",
@@ -23,7 +23,7 @@
   },
   "scripts": {
     "dev": "tsx watch src/cli.ts",
-    "run": "tsx src/cli.ts",
+    "echos": "tsx src/cli.ts",
     "build": "npm run build:runtime && npm run build:server && npm run build:web",
     "build:runtime": "tsc -p tsconfig.json && chmod +x dist/cli.js",
     "build:server": "cd server && npm run build",

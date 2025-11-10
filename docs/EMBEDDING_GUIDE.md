@@ -30,18 +30,15 @@ This guide shows you how to integrate Echos into Next.js, Express, and other Nod
 
 ```typescript
 // app/api/analyze/route.ts
-import { EchosRuntime, loadWorkflow, builtInAgents } from '@echoshq/runtime';
+import { EchosRuntime } from '@echoshq/runtime';
 import { NextRequest, NextResponse } from 'next/server';
 
 // Initialize runtime once (singleton)
-const runtime = new EchosRuntime(
-  loadWorkflow('./workflow.yaml'),
-  builtInAgents,
-  {
-    apiKey: process.env.ECHOS_API_KEY!,
-    apiUrl: process.env.ECHOS_API_URL || 'http://localhost:4000'
-  }
-);
+const runtime = new EchosRuntime({
+  workflow: './workflow.yaml',  // optional
+  apiKey: process.env.ECHOS_API_KEY!,
+  apiUrl: process.env.ECHOS_API_URL || 'http://localhost:4000'
+});
 
 export async function POST(request: NextRequest) {
   const { task, customerId } = await request.json();
@@ -86,20 +83,17 @@ async function analyzeData() {
 
 ```typescript
 import express from 'express';
-import { EchosRuntime, loadWorkflow, builtInAgents } from '@echoshq/runtime';
+import { EchosRuntime } from '@echoshq/runtime';
 
 const app = express();
 app.use(express.json());
 
 // Initialize runtime
-const runtime = new EchosRuntime(
-  loadWorkflow('./workflow.yaml'),
-  builtInAgents,
-  {
-    apiKey: process.env.ECHOS_API_KEY!,
-    apiUrl: process.env.ECHOS_API_URL || 'http://localhost:4000'
-  }
-);
+const runtime = new EchosRuntime({
+  workflow: './workflow.yaml',  // optional
+  apiKey: process.env.ECHOS_API_KEY!,
+  apiUrl: process.env.ECHOS_API_URL || 'http://localhost:4000'
+});
 
 app.post('/api/agents/run', async (req, res) => {
   const { task, memory } = req.body;

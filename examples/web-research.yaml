@@ -59,7 +59,7 @@ memory:
     output_format: "executive summary"
 
 # Example commands to try:
-# npm run run -- "Search for the latest AI agent frameworks and compare their features"
-# npm run run -- "Research competitor pricing for SaaS products and create a summary"
-# npm run run -- "Find recent news about multi-agent systems and analyze trends"
+# npm run echos -- "Search for the latest AI agent frameworks and compare their features"
+# npm run echos -- "Research competitor pricing for SaaS products and create a summary"
+# npm run echos -- "Find recent news about multi-agent systems and analyze trends"
 

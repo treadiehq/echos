@@ -31,15 +31,14 @@ npm run start
 npm install @echoshq/runtime
 
 # 4. Use it
-import { EchosRuntime, loadWorkflow, builtInAgents } from '@echoshq/runtime';
+import { EchosRuntime } from '@echoshq/runtime';
 
-const runtime = new EchosRuntime(
-  loadWorkflow('./workflow.yaml'),
-  builtInAgents,
-  { apiKey: process.env.ECHOS_API_KEY }
-);
+const runtime = new EchosRuntime({
+  workflow: './workflow.yaml',  // optional
+  apiKey: process.env.ECHOS_API_KEY
+});
 
-await runtime.run({ task: 'Your task here' });
+await runtime.run('Your task here');
 
 # 5. Watch traces at http://localhost:3000
 ```

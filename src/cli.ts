@@ -1,9 +1,7 @@
 #!/usr/bin/env node
 
 import 'dotenv/config';
-import { loadWorkflow } from "./lib/config.js";
 import { EchosRuntime } from "./runtime.js";
-import { builtInAgents } from "./agents/index.js";
 
 async function main() {
   const task = process.argv.slice(2).join(" ").trim();
@@ -21,12 +19,14 @@ async function main() {
     process.exit(1);
   }
 
-  const wf = loadWorkflow("workflow.yaml");
-  const rt = new EchosRuntime(wf, builtInAgents, { apiKey });
+  const rt = new EchosRuntime({
+    workflow: 'workflow.yaml',
+    apiKey
+  });
 
   console.log("🔐 Validating API key...");
   
-  const res = await rt.run({ task, memory: {} });
+  const res = await rt.run(task);
   console.log("\n--- RESULT ---");
   console.log(JSON.stringify(res, null, 2));
   console.log(`\n✅ Trace logged to your organization (${res.orgId})`);

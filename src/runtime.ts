@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 import type { Agent, AgentInput, AgentName, WorkflowConfig, AgentPolicy } from "./types";
 import { TraceStore } from "./lib/trace";
-import { mapAgents } from "./agents";
+import { mapAgents, builtInAgents } from "./agents";
+import { loadWorkflow } from "./lib/config";
 
 export interface RunOptions {
   task: string;
@@ -25,9 +26,11 @@ function readView(mem: Mem, readFrom?: string[]): Record<string, unknown> {
 }
 
 export interface EchosConfig {
-  apiKey: string;
+  apiKey?: string;
   apiUrl?: string;
+  workflow?: string; // Path to workflow YAML file
   workflowName?: string; // Optional workflow name for tracking (overridden by workflow config)
+  agents?: Agent[]; // Custom agents to register
 }
 
 export class EchosRuntime {
@@ -38,16 +41,39 @@ export class EchosRuntime {
   private orgId?: string;
   private workflowName: string;
 
-  constructor(cfg: WorkflowConfig, agents: Agent[], config: EchosConfig) {
-    if (!config.apiKey) {
-      throw new Error('API key is required. Sign up at https://echos.ai to get your API key');
+  constructor(config: EchosConfig = {}) {
+    // Get API key from config or environment
+    const apiKey = config.apiKey || process.env.ECHOS_API_KEY;
+    if (!apiKey) {
+      throw new Error('API key is required. Set ECHOS_API_KEY environment variable or pass apiKey in config. Sign up at https://echos.ai to get your API key');
     }
-    this.cfg = cfg;
-    this.agentMap = mapAgents(agents);
-    this.apiKey = config.apiKey;
+    
+    this.apiKey = apiKey;
     this.apiUrl = config.apiUrl || process.env.ECHOS_API_URL || 'http://localhost:4000';
+    
+    // Load workflow from file or use default
+    const workflowPath = config.workflow || 'workflow.yaml';
+    try {
+      this.cfg = loadWorkflow(workflowPath);
+    } catch (err) {
+      // If workflow file not found, use a minimal default configuration
+      this.cfg = {
+        name: config.workflowName || 'default-workflow',
+        agents: [
+          { name: 'orchestrator', type: 'orchestrator' }
+        ],
+        routes: {
+          orchestrator: { canCall: [] }
+        }
+      };
+    }
+    
+    // Use built-in agents by default, but allow custom agents to be added
+    const agents = [...builtInAgents, ...(config.agents || [])];
+    this.agentMap = mapAgents(agents);
+    
     // Priority: workflow.yaml name > constructor workflowName > default
-    this.workflowName = cfg.name || config.workflowName || 'embedded-workflow';
+    this.workflowName = this.cfg.name || config.workflowName || 'embedded-workflow';
   }
 
   async validateApiKey(): Promise<void> {
@@ -76,7 +102,12 @@ export class EchosRuntime {
     }
   }
 
-  async run(opts: Omit<RunOptions, "workflow" | "agents">) {
+  async run(taskOrOpts: string | Omit<RunOptions, "workflow" | "agents">) {
+    // Support both string and object input
+    const opts = typeof taskOrOpts === 'string' 
+      ? { task: taskOrOpts } 
+      : taskOrOpts;
+
     // Validate API key before running
     if (!this.orgId) {
       await this.validateApiKey();

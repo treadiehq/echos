@@ -118,8 +118,8 @@ memory:
 
 # Example commands to try:
 # First, add URL to payload programmatically, or modify api_agent to extract from message
-# npm run run -- "Fetch GitHub repos for vercel and analyze their popularity"
-# npm run run -- "Get data from jsonplaceholder users endpoint and summarize"
+# npm run echos -- "Fetch GitHub repos for vercel and analyze their popularity"
+# npm run echos -- "Get data from jsonplaceholder users endpoint and summarize"
 
 # Note: For API calls, you'll need to provide the URL in the payload:
 # const result = await runtime.run({

@@ -71,7 +71,7 @@ memory:
     database_type: "postgresql"
 
 # Example commands to try:
-# npm run run -- "Get all orders from the last 30 days and summarize revenue by category"
-# npm run run -- "Query users who signed up this month and analyze their demographics"
-# npm run run -- "Find top 10 products by sales and create a summary report"
+# npm run echos -- "Get all orders from the last 30 days and summarize revenue by category"
+# npm run echos -- "Query users who signed up this month and analyze their demographics"
+# npm run echos -- "Find top 10 products by sales and create a summary report"
 
