@@ -1,4 +1,5 @@
-# Frontend Web App Dockerfile
+# Frontend Web App Dockerfile (Nuxt 3)
+# Updated: 2025-11-10
 FROM node:20-slim
 
 WORKDIR /app
