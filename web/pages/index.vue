@@ -825,20 +825,21 @@ const result = await echos.run({
               </ol>
               <div class="mt-2 bg-black border border-gray-500/20 rounded p-3 font-mono text-[11px] overflow-x-auto">
 <pre class="text-gray-300"><span class="text-gray-500">// Install Echos</span>
-npm install <span class="text-amber-300">echos</span>
+npm install <span class="text-amber-300">@echoshq/runtime</span>
 
 <span class="text-gray-500">// In your application:</span>
-<span class="text-purple-400">import</span> { <span class="text-sky-300">EchosRuntime</span>, <span class="text-sky-300">loadWorkflow</span>, <span class="text-sky-300">builtInAgents</span> } <span class="text-purple-400">from</span> <span class="text-amber-300">'echos'</span>
+<span class="text-purple-400">import</span> { <span class="text-sky-300">EchosRuntime</span> } <span class="text-purple-400">from</span> <span class="text-amber-300">'@echoshq/runtime'</span>
 
-<span class="text-purple-400">const</span> <span class="text-sky-300">runtime</span> = <span class="text-purple-400">new</span> <span class="text-sky-300">EchosRuntime</span>(
-  <span class="text-sky-300">loadWorkflow</span>(<span class="text-amber-300">'./workflow.yaml'</span>),
-  builtInAgents,
-  {
-    apiKey: <span class="text-blue-300">process</span>.<span class="text-blue-300">env</span>.<span class="text-amber-300">ECHOS_API_KEY</span>,
-    apiUrl: <span class="text-amber-300">'http://localhost:4000'</span>
-  }
-)
+<span class="text-purple-400">const</span> <span class="text-sky-300">runtime</span> = <span class="text-purple-400">new</span> <span class="text-sky-300">EchosRuntime</span>({
+  apiKey: <span class="text-blue-300">process</span>.<span class="text-blue-300">env</span>.<span class="text-amber-300">ECHOS_API_KEY</span>,
+  apiUrl: <span class="text-amber-300">'https://api.echoshq.com'</span>,
+  workflow: <span class="text-amber-300">'./workflow.yaml'</span> <span class="text-gray-500">// optional</span>
+})
 
+<span class="text-gray-500">// Simple string input</span>
+<span class="text-purple-400">const</span> <span class="text-sky-300">result</span> = <span class="text-purple-400">await</span> runtime.<span class="text-sky-300">run</span>(<span class="text-amber-300">'Analyze sales data for Q4'</span>)
+
+<span class="text-gray-500">// Or with memory context</span>
 <span class="text-purple-400">const</span> <span class="text-sky-300">result</span> = <span class="text-purple-400">await</span> runtime.<span class="text-sky-300">run</span>({
   task: <span class="text-amber-300">'Analyze sales data for Q4'</span>,
   memory: { year: <span class="text-emerald-300">2024</span> }

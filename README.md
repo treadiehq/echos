@@ -63,11 +63,19 @@ Use anywhere:
 import { EchosRuntime } from '@echoshq/runtime';
 
 const runtime = new EchosRuntime({ 
-  workflow: './workflow.yaml', // optional
-  apiKey: process.env.ECHOS_API_KEY
+  apiKey: process.env.ECHOS_API_KEY,
+  apiUrl: 'https://api.echoshq.com', // or http://localhost:4000 for local
+  workflow: './workflow.yaml' // optional, defaults to 'workflow.yaml'
 });
 
+// Simple usage
 await runtime.run('Analyze Q4 sales by region');
+
+// Or with memory context
+await runtime.run({
+  task: 'Analyze Q4 sales by region',
+  memory: { year: 2024, region: 'north' }
+});
 ```
 
 ---
@@ -103,8 +111,9 @@ npx echos "Analyze customer data from the database"
 import { EchosRuntime } from '@echoshq/runtime';
 
 const runtime = new EchosRuntime({
-  workflow: './workflow.yaml',  # optional
-  apiKey: process.env.ECHOS_API_KEY
+  apiKey: process.env.ECHOS_API_KEY,
+  apiUrl: 'https://api.echoshq.com',
+  workflow: './workflow.yaml'  // optional
 });
 
 await runtime.run('Your task');
