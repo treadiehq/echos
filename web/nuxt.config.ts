@@ -13,6 +13,9 @@ export default defineNuxtConfig({
   app: {
     head: {
       title: "Echos - Multi-Agent Runtime",
+      meta: [
+        { name: 'version', content: '1.0.1' }
+      ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
       ],
