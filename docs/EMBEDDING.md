@@ -135,10 +135,40 @@ agents:
 ```bash
 # Required
 ECHOS_API_KEY=ek_test_...        # From Settings page
-OPENAI_API_KEY=sk-...            # Or ANTHROPIC_API_KEY
+
+# LLM Provider - Choose one:
+# Option 1: OpenAI
+LLM_PROVIDER=openai
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4o              # or gpt-4, gpt-3.5-turbo
+
+# Option 2: Anthropic
+LLM_PROVIDER=anthropic
+ANTHROPIC_API_KEY=sk-ant-...
+ANTHROPIC_MODEL=claude-3-5-sonnet-20241022  # or claude-3-opus, claude-3-haiku
 
 # Optional
 ECHOS_API_URL=http://localhost:4000
+```
+
+**Model Selection Guide:**
+
+| Use Case | Recommended Model | Cost | Speed |
+|----------|------------------|------|-------|
+| Simple routing | GPT-3.5 / Claude Haiku | $ | ⚡⚡⚡ |
+| Complex analysis | GPT-4o / Claude Sonnet | $$$ | ⚡ |
+| Code generation | GPT-4o / Claude Sonnet | $$$ | ⚡ |
+| Data summarization | Claude Haiku | $ | ⚡⚡⚡ |
+
+**Switch models instantly:**
+```bash
+# Development: Use cheap models
+export LLM_PROVIDER=openai
+export OPENAI_MODEL=gpt-3.5-turbo
+
+# Production: Use powerful models
+export LLM_PROVIDER=anthropic
+export ANTHROPIC_MODEL=claude-3-5-sonnet-20241022
 ```
 
 ---
