@@ -30,7 +30,12 @@ npm run start
 # 3. Install in your project
 npm install @echoshq/runtime
 
-# 4. Use it
+# 4. Use it (CLI or programmatically)
+
+# Quick test with CLI:
+npx echos "Analyze customer data from the database"
+
+# Or use in your code:
 import { EchosRuntime } from '@echoshq/runtime';
 
 const runtime = new EchosRuntime({
@@ -54,6 +59,7 @@ await runtime.run('Your task here');
 | `npm run start` | Start everything |
 | `npm run stop` | Stop everything |
 | `npm run restart` | Restart everything |
+| `npm run echos -- "task"` | Run a workflow task (dev) |
 
 ---
 
