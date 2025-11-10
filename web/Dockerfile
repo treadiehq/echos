@@ -22,5 +22,5 @@ ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 
 # Start the server with dynamic port from Railway
-CMD sh -c "NITRO_PORT=${PORT:-3000} node .output/server/index.mjs"
+CMD sh -c "PORT=${PORT:-3000} node .output/server/index.mjs"
 
