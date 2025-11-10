@@ -23,7 +23,6 @@ EXPOSE 3000
 ENV NODE_ENV=production
 ENV NITRO_HOST=0.0.0.0
 
-# Railway will provide PORT at runtime, which Nitro will use as NITRO_PORT
-# Start the Nuxt app  
-CMD ["npm", "run", "start"]
+# Start command that sets NITRO_PORT from Railway's PORT and runs Nitro directly
+CMD sh -c 'export NITRO_PORT=${PORT:-3000} && echo "Starting Nitro on $NITRO_HOST:$NITRO_PORT" && node .output/server/index.mjs'
 
