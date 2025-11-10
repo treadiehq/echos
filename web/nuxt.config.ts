@@ -3,7 +3,8 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineNuxtConfig({
   devtools: { enabled: false },
   nitro: { 
-    preset: "node"
+    preset: "node",
+    serveStatic: true
   },
   runtimeConfig: {
     public: {
