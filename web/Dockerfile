@@ -11,6 +11,10 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
+# Copy public assets to where node-server preset expects them
+RUN mkdir -p .output/server/chunks/public && \
+    cp -r .output/public/* .output/server/chunks/public/
+
 # ---- run stage ----
 FROM node:20-slim AS runner
 
