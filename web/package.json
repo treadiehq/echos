@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "nuxt dev",
-    "build": "npm run copy-workflows && nuxt build",
-    "copy-workflows": "mkdir -p public/workflows && cp -r ../workflow.yaml ../examples public/workflows/",
+    "build": "npm run copy-workflows; nuxt build",
+    "copy-workflows": "mkdir -p public/workflows && (cp -r ../workflow.yaml ../examples public/workflows/ 2>/dev/null || echo 'Workflow files not found in parent directory, skipping copy')",
     "start": "node .output/server/index.mjs",
     "preview": "nuxt preview"
   },
