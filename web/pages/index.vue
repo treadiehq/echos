@@ -19,7 +19,6 @@ const { copy, isCopied } = useCopyToClipboard();
 const search = ref("");
 const debouncedSearch = useDebounce(search, 300);
 const sortOption = ref<"recent" | "oldest" | "size">("recent");
-const statusFilter = ref<"all" | "ok" | "error">("all");
 const workflowFilter = ref<string>("all");
 
 const traces = ref<TraceMeta[]>([]);
@@ -59,7 +58,11 @@ function fuzzyMatch(text: string, query: string) {
 }
 
 const uniqueWorkflows = computed(() => {
-  const workflows = new Set(traces.value.map(t => t.workflow_id).filter(Boolean));
+  const workflows = new Set(
+    traces.value
+      .map(t => t.workflow_id)
+      .filter((w): w is string => Boolean(w))
+  );
   return Array.from(workflows);
 });
 
@@ -526,7 +529,7 @@ onBeforeUnmount(() => {
             class="p-4 rounded-lg bg-red-400/10 border border-red-400/20 text-red-300 text-sm space-y-2"
           >
             <div class="flex items-start gap-2">
-              <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div class="flex-1 leading-snug">
@@ -722,7 +725,7 @@ const result = await echos.run({
         >
           <div class="rounded-xl border border-red-400/10 bg-red-400/10 p-6 space-y-4">
             <div class="flex items-start gap-3">
-              <svg class="w-6 h-6 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-6 h-6 text-red-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div class="flex-1">
@@ -1033,7 +1036,7 @@ npm install <span class="text-amber-300">echos</span>
                   >
                     {{ typeof s.output === 'string' ? s.output : JSON.stringify(s.output) }}
                   </p>
-                  <div v-if="s.attempt > 1" class="px-1.5 w-fit flex py-0.5 mt-2 flex-1 flex-shrink-0 rounded bg-amber-300/10 border border-amber-300/20 text-[10px] font-mono text-amber-300">try {{ s.attempt }}</div>
+                  <div v-if="s.attempt > 1" class="px-1.5 w-fit flex py-0.5 mt-2 flex-1 shrink-0 rounded bg-amber-300/10 border border-amber-300/20 text-[10px] font-mono text-amber-300">try {{ s.attempt }}</div>
                 </button>
               </div>
             </div>

@@ -1,27 +1,81 @@
+# Dependencies
 node_modules/
+
+# Build outputs
 dist/
-traces/*.json
+server/dist/
+web/.output/
+web/.nuxt/
+*.tsbuildinfo
+
+# Runtime artifacts
+traces/
 *.log
-.DS_Store
+*.log.*
 
 # Environment files (keep .env.example)
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 
-# Build outputs
-*.tsbuildinfo
-.nuxt/
-.output/
+# Test & Development files
+test-*.mjs
+test-*.ts
+test-*.sh
+example-usage.mjs
+example-usage.ts
 
-# IDE
+# Backup files
+*.backup
+*.bak
+*~
+
+# npm package
+*.tgz
+
+# IDE & Editors
 .vscode/
 .idea/
 *.swp
 *.swo
+*.sublime-project
+*.sublime-workspace
 
-# OS
+# OS files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
-# Internal planning docs (not for public)
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Coverage & Testing
+coverage/
+.nyc_output/
+*.lcov
+
+# Production secrets (if any)
+secrets/
+*.pem
+*.key
+!*.pub.key

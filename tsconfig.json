@@ -8,6 +8,8 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "outDir": "dist",
+    "declaration": true,
+    "declarationMap": true,
     "resolveJsonModule": true,
     "types": ["node"]
   },

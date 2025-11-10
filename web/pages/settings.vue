@@ -207,7 +207,7 @@ const dismissCreatedKey = () => {
                 <code class="text-emerald-300 break-all">{{ createdKey.key }}</code>
                 <button
                   @click="copyToClipboard(createdKey.key)"
-                  class="flex-shrink-0 px-3 py-1.5 font-medium bg-emerald-300 hover:bg-emerald-400 text-black rounded-lg text-sm transition"
+                  class="shrink-0 px-3 py-1.5 font-medium bg-emerald-300 hover:bg-emerald-400 text-black rounded-lg text-sm transition"
                 >
                   Copy
                 </button>
@@ -397,7 +397,7 @@ const dismissCreatedKey = () => {
               class="bg-black rounded-xl p-6 border border-gray-500/30 max-w-md w-full shadow-2xl"
             >
               <div class="flex items-start gap-4 mb-4">
-                <div class="w-12 h-12 rounded-full bg-red-400/10 flex items-center justify-center flex-shrink-0">
+                <div class="w-12 h-12 rounded-full bg-red-400/10 flex items-center justify-center shrink-0">
                   <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>

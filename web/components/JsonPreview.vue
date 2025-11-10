@@ -102,7 +102,7 @@ onBeforeUnmount(() => {
       </div>
       <div 
         v-if="!expanded && canExpand" 
-        class="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/90 to-transparent pointer-events-none"
+        class="absolute inset-x-0 bottom-0 h-14 bg-black to-transparent pointer-events-none"
       ></div>
     </div>
   </div>

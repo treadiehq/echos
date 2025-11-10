@@ -8,9 +8,6 @@
           </NuxtLink>
           <span class="text-gray-500/60 font-medium text-xs">|</span>
           <div v-if="auth.currentOrg.value" class="flex items-center gap-2">
-            <!-- <div class="w-4 h-4 rounded bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-[8px] font-bold">
-              {{ auth.currentOrg.value.name.charAt(0).toUpperCase() }}
-            </div> -->
             <span class="text-white font-medium text-xs">{{ auth.currentOrg.value.name }}</span>
           </div>
         </div>

@@ -44,7 +44,7 @@ await runtime.run({ task: 'Your task here' });
 # 5. Watch traces at http://localhost:3000
 ```
 
-**→ See [Embedding Guide](docs/EMBEDDING_GUIDE.md) for integration examples**
+**→ See [Embedding](docs/EMBEDDING_GUIDE.md) for integration examples**
 
 ---
 
@@ -60,7 +60,7 @@ await runtime.run({ task: 'Your task here' });
 
 ## What's Next?
 
-- **[Embedding Guide](docs/EMBEDDING_GUIDE.md)** - Integrate Echos into your app
+- **[Embedding](docs/EMBEDDING_GUIDE.md)** - Integrate Echos into your app
 - **[workflow.yaml](workflow.yaml)** - See example workflow configuration
 - **[examples/](examples/)** - Pre-built workflow templates
 

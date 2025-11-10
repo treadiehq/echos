@@ -17,6 +17,10 @@ tests/
 __tests__/
 *.test.ts
 *.spec.ts
+test-*.mjs
+test-*.sh
+example-usage.ts
+example-usage.mjs
 
 # Build artifacts
 node_modules/
@@ -43,11 +47,14 @@ CONTRIBUTING.md
 
 # Docker (keep for reference but not in npm)
 docker-compose.yml
+Dockerfile
 .dockerignore
 
-# IDE
-*.swp
-*.swo
-.vscode/
-.idea/
+# Shell scripts (for development only)
+*.sh
+!*.bash
+
+# Backup files
+*.backup
+workflow.backup
 
