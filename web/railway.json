@@ -4,7 +4,6 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "sh -c 'echo \"🚀 Starting Echos Frontend on port $PORT\" && HOST=0.0.0.0 PORT=$PORT node .output/server/index.mjs 2>&1'",
     "numReplicas": 1,
     "sleepApplication": false,
     "restartPolicyType": "ON_FAILURE",
