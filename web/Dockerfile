@@ -1,26 +1,32 @@
-FROM node:20-slim
+# ---- build stage ----
+FROM node:20-slim AS build
 
 WORKDIR /app
 
-# Copy package files
+# Install deps
 COPY package.json package-lock.json ./
+RUN npm ci
 
-# Install dependencies
-RUN npm ci --production=false
-
-# Copy app files
+# Copy source and build
 COPY . .
-
-# Build the Nuxt app
 RUN npm run build
 
-# Expose port (Railway will provide $PORT)
+# ---- run stage ----
+FROM node:20-slim AS runner
+
+WORKDIR /app
+
+# Runtime env
+ENV NODE_ENV=production
+# Nitro respects PORT and also NITRO_HOST/NITRO_PORT
+ENV NITRO_HOST=0.0.0.0
+
+# Copy only the output
+COPY --from=build /app/.output ./.output
+
+# Railway will provide PORT; expose a default for local runs
 EXPOSE 3000
 
-# Set environment variables
-ENV NODE_ENV=production
-ENV HOST=0.0.0.0
-
-# Start the server with dynamic port from Railway
-CMD sh -c "PORT=${PORT:-3000} node .output/server/index.mjs"
+# Start Nitro (it will use $PORT from Railway)
+CMD ["node", ".output/server/index.mjs"]
 
