@@ -19,10 +19,11 @@ RUN npm run build
 # Expose port
 EXPOSE 3000
 
-# Set environment variable for production
+# Set environment variables for production
 ENV NODE_ENV=production
-ENV HOST=0.0.0.0
+ENV NITRO_HOST=0.0.0.0
 
-# Start the Nuxt app
+# Railway will provide PORT at runtime, which Nitro will use as NITRO_PORT
+# Start the Nuxt app  
 CMD ["npm", "run", "start"]
 
