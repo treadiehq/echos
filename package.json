@@ -1,6 +1,6 @@
 {
   "name": "@echoshq/runtime",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Multi-agent workflow runtime with intelligent routing, guardrails, and observability",
   "type": "module",
   "main": "./dist/index.js",
