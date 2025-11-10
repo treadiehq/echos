@@ -18,27 +18,59 @@ Echos lets you:
 
 ## Quick Start
 
-### 1. Start the platform
+### Installation
+
+**Option 1: Use the npm package (recommended)**
 
 ```bash
+npm install @echoshq/runtime
+```
+
+**Option 2: Run the full platform locally**
+
+```bash
+git clone https://github.com/treadiehq/echos.git
+cd echos
 npm install
 npm run start
 ```
 
-This starts everything: database, API server, and web UI.
+This starts: database, API server, and web UI at `http://localhost:3000`
 
-### 2. Sign up
+---
 
-Open `http://localhost:3000/signup` and create an account.
+### 1. Start the Echos platform
 
-### 3. Get your API key
+The runtime needs the Echos API server running:
 
-Go to Settings and create an API key.
+```bash
+git clone https://github.com/treadiehq/echos.git
+cd echos
+npm install
+npm run start
+```
 
-### 4. Run your first workflow
+### 2. Sign up and get your API key
 
-```typescript
-import { EchosRuntime, loadWorkflow, builtInAgents } from 'echos';
+1. Open `http://localhost:3000/signup`
+2. Create an account
+3. Go to Settings and create an API key
+4. Copy the key to your `.env` file
+
+### 3. Use Echos in your project
+
+Install the runtime:
+
+```bash
+npm install @echoshq/runtime
+```
+
+Create your script:
+
+```javascript
+// test.mjs
+import { EchosRuntime, loadWorkflow, builtInAgents } from '@echoshq/runtime';
+import 'dotenv/config';
 
 const runtime = new EchosRuntime(
   loadWorkflow('./workflow.yaml'),
@@ -57,7 +89,13 @@ const result = await runtime.run({
 console.log(result);
 ```
 
-### 5. Watch it run
+Run it:
+
+```bash
+node test.mjs
+```
+
+### 4. Watch it run
 
 Go to `http://localhost:3000` and watch your agents work in real-time! 🎉
 
@@ -130,9 +168,9 @@ JWT_SECRET=your-secret-key
 
 ## Need help?
 
-- 📖 Check the code examples in `test-echos.mjs`
-- 🐛 Look at traces in the UI to debug
-- 💡 Modify `workflow.yaml` to add more agents
+- Check the code examples in `test-echos.mjs`
+- Look at traces in the UI to debug
+- Modify `workflow.yaml` to add more agents
 
 ---
 

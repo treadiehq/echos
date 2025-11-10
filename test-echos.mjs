@@ -1,3 +1,5 @@
+// You can use either the published package or local source:
+// import { EchosRuntime, loadWorkflow, builtInAgents } from '@echoshq/runtime';
 import { EchosRuntime, loadWorkflow, builtInAgents } from './dist/index.js'
 import 'dotenv/config'
 
