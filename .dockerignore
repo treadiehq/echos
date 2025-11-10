@@ -1,0 +1,52 @@
+# Node modules (will be installed in container)
+node_modules/
+server/node_modules/
+web/node_modules/
+
+# Build outputs (will be built in container)
+dist/
+server/dist/
+web/.output/
+web/.nuxt/
+*.tsbuildinfo
+
+# Development files
+.git/
+.github/
+.vscode/
+.idea/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs and traces
+*.log
+traces/*.json
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Test files
+tests/
+__tests__/
+*.test.ts
+*.spec.ts
+
+# CI/CD
+.gitlab-ci.yml
+.travis.yml
+
+# Temporary files
+tmp/
+temp/
+

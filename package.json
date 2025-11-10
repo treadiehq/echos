@@ -1,0 +1,85 @@
+{
+  "name": "echos",
+  "version": "0.1.0",
+  "description": "AI agent runtime with intelligent routing, guardrails, and observability",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "workflow.yaml",
+    "examples"
+  ],
+  "bin": {
+    "echos": "./dist/cli.js"
+  },
+  "scripts": {
+    "dev": "tsx watch src/cli.ts",
+    "run": "tsx src/cli.ts",
+    "build": "npm run build:runtime && npm run build:server && npm run build:web",
+    "build:runtime": "tsc -p tsconfig.json && chmod +x dist/cli.js",
+    "build:server": "cd server && npm run build",
+    "build:web": "cd web && npm run build",
+    "start": "./start.sh",
+    "stop": "./stop.sh",
+    "restart": "./restart.sh",
+    "start:prod": "concurrently -n \"API,UI\" -c \"cyan,magenta\" \"cd server && node dist/main.js\" \"cd web && node .output/server/index.mjs\"",
+    "clean": "rm -rf dist && cd server && rm -rf dist && cd ../web && rm -rf .output .nuxt",
+    "visualize": "tsx scripts/visualize-workflow.ts",
+    "prepublishOnly": "npm run clean && npm run build:runtime",
+    "test": "echo \"Tests coming soon\" && exit 0"
+  },
+  "keywords": [
+    "ai",
+    "agents",
+    "multi-agent",
+    "orchestration",
+    "llm",
+    "openai",
+    "anthropic",
+    "workflow",
+    "runtime",
+    "guardrails",
+    "observability"
+  ],
+  "author": "Echos Team",
+  "license": "FSL-1.1-MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/treadiehq/echos.git"
+  },
+  "bugs": {
+    "url": "https://github.com/treadiehq/echos/issues"
+  },
+  "homepage": "https://github.com/treadiehq/echos#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "yaml": "^2.4.0",
+    "zod": "^3.23.8",
+    "uuid": "^10.0.0",
+    "date-fns": "^3.6.0",
+    "openai": "^4.73.1",
+    "@anthropic-ai/sdk": "^0.32.1",
+    "pg": "^8.13.1",
+    "dotenv": "^16.4.7",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "tsx": "^4.19.0",
+    "@types/node": "^22.7.0",
+    "@types/pg": "^8.11.10",
+    "concurrently": "^8.2.2"
+  }
+}
+

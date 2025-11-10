@@ -1,0 +1,53 @@
+# Source files (ship only dist/)
+src/
+*.ts
+!*.d.ts
+tsconfig.json
+
+# Development files
+web/
+server/
+scripts/
+.github/
+.vscode/
+.idea/
+
+# Test files
+tests/
+__tests__/
+*.test.ts
+*.spec.ts
+
+# Build artifacts
+node_modules/
+traces/
+*.log
+*.tsbuildinfo
+.DS_Store
+
+# Environment & config
+.env
+.env.*
+!.env.example
+
+# Documentation (keep some)
+docs/
+SAAS_ROADMAP.md
+OSS_EMBEDDING_GUIDE.md
+CONTRIBUTING.md
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Docker (keep for reference but not in npm)
+docker-compose.yml
+.dockerignore
+
+# IDE
+*.swp
+*.swo
+.vscode/
+.idea/
+

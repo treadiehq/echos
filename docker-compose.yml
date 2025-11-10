@@ -1,0 +1,89 @@
+services:
+  # ====================
+  # Echos Runtime (API Server)
+  # ====================
+  echos:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: echos-api
+    ports:
+      - "4001:4000"  # API Server
+    environment:
+      # LLM Configuration (required)
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4}
+      
+      # Database (optional - connects to postgres service if enabled)
+      DATABASE_URL: ${DATABASE_URL:-postgresql://echos:echos@postgres:5432/echos}
+      
+      # Search APIs (optional)
+      SERPER_API_KEY: ${SERPER_API_KEY}
+      BRAVE_API_KEY: ${BRAVE_API_KEY}
+      
+      # Code execution (disabled by default)
+      ENABLE_CODE_EXECUTION: ${ENABLE_CODE_EXECUTION:-false}
+      
+      # UI Configuration
+      PORT: 4000
+      CORS_ORIGIN: http://localhost:3000
+      ECHOS_LOGS: 1
+    volumes:
+      # Mount custom workflow configs
+      - ./workflow.yaml:/app/workflow.yaml:ro
+      - ./examples:/app/examples:ro
+      # Persist traces
+      - echos-traces:/app/traces
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4000/health', (r) => { process.exit(r.statusCode === 200 ? 0 : 1); })"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  # ====================
+  # PostgreSQL Database (optional)
+  # ====================
+  postgres:
+    image: postgres:15-alpine
+    container_name: echos-postgres
+    environment:
+      POSTGRES_DB: echos
+      POSTGRES_USER: echos
+      POSTGRES_PASSWORD: echos
+    ports:
+      - "5434:5432"  # PostgreSQL
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U echos"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ====================
+  # Redis Cache (optional, for future use)
+  # ====================
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: echos-redis
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis-data:/data
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     timeout: 3s
+  #     retries: 3
+
+volumes:
+  echos-traces:
+  postgres-data:
+  # redis-data:
+

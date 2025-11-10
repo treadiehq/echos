@@ -1,0 +1,27 @@
+node_modules/
+dist/
+traces/*.json
+*.log
+.DS_Store
+
+# Environment files (keep .env.example)
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+*.tsbuildinfo
+.nuxt/
+.output/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Internal planning docs (not for public)
