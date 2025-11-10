@@ -21,8 +21,9 @@ ENV NODE_ENV=production
 # Nitro respects PORT and also NITRO_HOST/NITRO_PORT
 ENV NITRO_HOST=0.0.0.0
 
-# Copy only the output
+# Copy only the output and package files for Railway
 COPY --from=build /app/.output ./.output
+COPY --from=build /app/package*.json ./
 
 # Railway will provide PORT; expose a default for local runs
 EXPOSE 3000
