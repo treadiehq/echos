@@ -64,7 +64,7 @@ import { EchosRuntime } from '@echoshq/runtime';
 
 const runtime = new EchosRuntime({ 
   apiKey: process.env.ECHOS_API_KEY,
-  apiUrl: 'https://api.echoshq.com', // or http://localhost:4000 for local
+  apiUrl: process.env.ECHOS_API_URL || 'http://localhost:4000'
   workflow: './workflow.yaml' // optional, defaults to 'workflow.yaml'
 });
 
@@ -112,7 +112,7 @@ import { EchosRuntime } from '@echoshq/runtime';
 
 const runtime = new EchosRuntime({
   apiKey: process.env.ECHOS_API_KEY,
-  apiUrl: 'https://api.echoshq.com',
+  apiUrl: process.env.ECHOS_API_URL || 'http://localhost:4000'
   workflow: './workflow.yaml'  // optional
 });
 
