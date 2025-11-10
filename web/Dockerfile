@@ -14,6 +14,20 @@ COPY . .
 # Build the Nuxt app
 RUN npm run build
 
+# Debug: Show what was built
+RUN echo "=== Build output structure ===" && \
+    ls -la .output/ && \
+    echo "=== Public directory ===" && \
+    ls -la .output/public/ && \
+    echo "=== Server directory ===" && \
+    ls -la .output/server/
+
+# Copy public assets to where node-server preset expects them
+RUN mkdir -p .output/server/chunks/public && \
+    cp -r .output/public/* .output/server/chunks/public/ && \
+    echo "=== Assets copied ===" && \
+    ls -la .output/server/chunks/public/
+
 # Expose port (Railway will provide $PORT)
 EXPOSE 3000
 
