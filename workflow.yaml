@@ -92,7 +92,7 @@ agents:
         readFrom: ["global", "orchestrator"]
         writeTo: "database"
       guardrails:
-        maxCostPerInvocation: 0.10
+        maxCostPerInvocation: 1.0
 
 routes:
   orchestrator:
