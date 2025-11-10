@@ -23,10 +23,14 @@ RUN echo "=== Build output structure ===" && \
     ls -la .output/server/
 
 # Copy public assets to where node-server preset expects them
-RUN mkdir -p .output/server/chunks/public && \
-    cp -r .output/public/* .output/server/chunks/public/ && \
+RUN mkdir -p .output/server/chunks && \
+    cp -r .output/public .output/server/chunks/ && \
     echo "=== Assets copied ===" && \
-    ls -la .output/server/chunks/public/
+    ls -la .output/server/chunks/public/ && \
+    echo "=== _nuxt directory ===" && \
+    ls -la .output/server/chunks/public/_nuxt/ || echo "No _nuxt dir" && \
+    echo "=== builds/meta directory ===" && \
+    find .output/server/chunks/public -name "*.json" | head -10
 
 # Expose port (Railway will provide $PORT)
 EXPOSE 3000
