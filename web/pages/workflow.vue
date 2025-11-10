@@ -70,7 +70,7 @@ const vClickOutside = {
     <!-- Header -->
     <AppHeader>
       <template #selector>
-        <div class="relative">
+        <div v-if="availableWorkflows.length > 0" class="relative">
           <button
             @click.stop="isDropdownOpen = !isDropdownOpen"
             type="button"
