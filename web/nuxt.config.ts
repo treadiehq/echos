@@ -2,17 +2,6 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineNuxtConfig({
   devtools: { enabled: false },
-  nitro: {
-    preset: 'node-server',
-    serveStatic: true,
-    publicAssets: [
-      {
-        baseURL: '/',
-        dir: 'public',
-        maxAge: 0
-      }
-    ]
-  },
   runtimeConfig: {
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE || process.env.API_BASE || "http://localhost:4000"
@@ -20,7 +9,10 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      title: "Echos - Multi-Agent Runtime"
+      title: "Echos - Multi-Agent Runtime",
+      link: [
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+      ],
     }
   },
   css: [
