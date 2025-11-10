@@ -10,7 +10,7 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      title: "Echos - Runtime"
+      title: "Echos - Multi-Agent Runtime"
     }
   },
   css: [
