@@ -1,5 +1,5 @@
-import type { Agent, AgentContext, AgentInput, AgentResult } from "../types";
-import { loadConfig } from "../config";
+import type { Agent, AgentContext, AgentInput, AgentResult } from "../types.js";
+import { loadConfig } from "../config.js";
 
 /**
  * Search Agent:

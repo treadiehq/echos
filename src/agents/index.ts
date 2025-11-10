@@ -1,10 +1,10 @@
-import { orchestrator } from "./orchestrator";
-import { db_agent } from "./db_agent";
-import { data_agent } from "./data_agent";
-import { search_agent } from "./search_agent";
-import { api_agent } from "./api_agent";
-import { code_agent } from "./code_agent";
-import type { Agent } from "../types";
+import { orchestrator } from "./orchestrator.js";
+import { db_agent } from "./db_agent.js";
+import { data_agent } from "./data_agent.js";
+import { search_agent } from "./search_agent.js";
+import { api_agent } from "./api_agent.js";
+import { code_agent } from "./code_agent.js";
+import type { Agent } from "../types.js";
 
 export const builtInAgents: Agent[] = [
   orchestrator,

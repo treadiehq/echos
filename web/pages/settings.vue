@@ -189,14 +189,14 @@ const dismissCreatedKey = () => {
           <!-- API Keys List -->
           <!-- Loading State -->
            <!-- New API Key Created Alert -->
-          <div v-if="createdKey" class="bg-emerald-300/5 border border-emerald-300/5 rounded-xl p-6">
+          <div v-if="createdKey" class="bg-emerald-300/5 border border-emerald-300/5 rounded-xl p-6 mb-3">
             <div class="flex items-start justify-between mb-4">
               <div>
                 <h3 class="text-lg font-semibold text-emerald-300 mb-1">API Key Created! 🎉</h3>
                 <p class="text-sm text-gray-300">Make sure to copy your API key now. You won't be able to see it again!</p>
               </div>
               <button @click="dismissCreatedKey" class="text-gray-400 hover:text-white">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>

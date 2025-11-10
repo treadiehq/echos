@@ -1,4 +1,4 @@
-import type { Agent, AgentContext, AgentInput, AgentResult } from "../types";
+import type { Agent, AgentContext, AgentInput, AgentResult } from "../types.js";
 
 /**
  * API Agent:

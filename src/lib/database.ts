@@ -1,5 +1,5 @@
 import pg from "pg";
-import type { StepMetadata } from "../types";
+import type { StepMetadata } from "../types.js";
 
 const { Pool } = pg;
 

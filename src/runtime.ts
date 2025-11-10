@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
-import type { Agent, AgentInput, AgentName, WorkflowConfig, AgentPolicy } from "./types";
-import { TraceStore } from "./lib/trace";
-import { mapAgents, builtInAgents } from "./agents";
-import { loadWorkflow } from "./lib/config";
+import type { Agent, AgentInput, AgentName, WorkflowConfig, AgentPolicy } from "./types.js";
+import { TraceStore } from "./lib/trace.js";
+import { mapAgents, builtInAgents } from "./agents/index.js";
+import { loadWorkflow } from "./lib/config.js";
 
 export interface RunOptions {
   task: string;

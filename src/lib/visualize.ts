@@ -1,4 +1,4 @@
-import type { WorkflowConfig } from "../types";
+import type { WorkflowConfig } from "../types.js";
 
 /**
  * Generate a Mermaid diagram from workflow configuration

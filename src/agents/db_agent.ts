@@ -1,7 +1,7 @@
-import type { Agent, AgentContext, AgentInput, AgentResult } from "../types";
-import { DatabaseClient } from "../lib/database";
-import { loadConfig } from "../config";
-import { createLLMClient } from "../lib/llm";
+import type { Agent, AgentContext, AgentInput, AgentResult } from "../types.js";
+import { DatabaseClient } from "../lib/database.js";
+import { loadConfig } from "../config.js";
+import { createLLMClient } from "../lib/llm.js";
 
 /**
  * Enhanced DB Agent:

@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { parse } from "yaml";
-import type { WorkflowConfig } from "../types";
+import type { WorkflowConfig } from "../types.js";
 
 export function loadWorkflow(p = "workflow.yaml"): WorkflowConfig {
   const file = path.resolve(process.cwd(), p);

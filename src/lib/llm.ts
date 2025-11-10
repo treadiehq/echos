@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
-import type { Config } from "../config";
-import type { StepMetadata } from "../types";
+import type { Config } from "../config.js";
+import type { StepMetadata } from "../types.js";
 
 export interface LLMMessage {
   role: "system" | "user" | "assistant";

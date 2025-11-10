@@ -1,6 +1,6 @@
-import type { Agent, AgentContext, AgentInput, AgentResult } from "../types";
-import { createLLMClient, type LLMMessage } from "../lib/llm";
-import { loadConfig } from "../config";
+import type { Agent, AgentContext, AgentInput, AgentResult } from "../types.js";
+import { createLLMClient, type LLMMessage } from "../lib/llm.js";
+import { loadConfig } from "../config.js";
 
 /**
  * LLM-Powered Orchestrator:
