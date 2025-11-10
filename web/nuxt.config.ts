@@ -3,11 +3,7 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineNuxtConfig({
   devtools: { enabled: false },
   nitro: { 
-    preset: "node",
-    // Ensure Nitro listens on all interfaces and uses Railway's PORT
-    devServer: {
-      host: '0.0.0.0'
-    }
+    preset: "node"
   },
   runtimeConfig: {
     public: {
