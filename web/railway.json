@@ -5,7 +5,7 @@
     "buildCommand": "npm install && npm run build"
   },
   "deploy": {
-    "startCommand": "sh -c 'echo \"🚀 Starting Echos Frontend...\" && echo \"PORT: $PORT\" && export HOST=0.0.0.0 && echo \"HOST=$HOST, PORT=$PORT\" && echo \"Starting Nitro...\" && node .output/server/index.mjs 2>&1 || (echo \"❌ Nitro crashed with exit code $?\" && exit 1)'",
+    "startCommand": "export NITRO_HOST=0.0.0.0 && export NITRO_PORT=$PORT && echo \"🚀 Starting Nitro on $NITRO_HOST:$NITRO_PORT\" && node .output/server/index.mjs",
     "numReplicas": 1,
     "sleepApplication": false,
     "restartPolicyType": "ON_FAILURE",
