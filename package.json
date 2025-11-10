@@ -32,6 +32,7 @@
     "stop": "./stop.sh",
     "restart": "./restart.sh",
     "start:prod": "concurrently -n \"API,UI\" -c \"cyan,magenta\" \"cd server && node dist/main.js\" \"cd web && node .output/server/index.mjs\"",
+    "start:server": "cd server && node dist/main.js",
     "clean": "rm -rf dist && cd server && rm -rf dist && cd ../web && rm -rf .output .nuxt",
     "visualize": "tsx scripts/visualize-workflow.ts",
     "prepublishOnly": "npm run clean && npm run build:runtime",
