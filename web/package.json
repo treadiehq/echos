@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "nuxt dev",
     "build": "nuxt build",
-    "start": "node --trace-warnings .output/server/index.mjs",
+    "start": "node server-wrapper.mjs",
     "preview": "nuxt preview"
   },
   "dependencies": {
