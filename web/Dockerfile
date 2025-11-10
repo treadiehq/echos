@@ -24,5 +24,5 @@ ENV NODE_ENV=production
 ENV NITRO_HOST=0.0.0.0
 
 # Start command that sets NITRO_PORT from Railway's PORT and runs Nitro directly
-CMD sh -c 'export NITRO_PORT=${PORT:-3000} && echo "Starting Nitro on $NITRO_HOST:$NITRO_PORT" && node .output/server/index.mjs'
+CMD sh -c 'export NITRO_PORT=${PORT:-3000} && echo "🚀 Echos Frontend Starting..." && echo "NITRO_HOST: $NITRO_HOST" && echo "NITRO_PORT: $NITRO_PORT" && echo "NODE_ENV: $NODE_ENV" && echo "PWD: $(pwd)" && echo "Starting Nitro server..." && node .output/server/index.mjs'
 
