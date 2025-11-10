@@ -1,10 +1,11 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "DOCKERFILE",
-    "dockerfilePath": "Dockerfile"
+    "builder": "NIXPACKS",
+    "buildCommand": "npm install && npm run build"
   },
   "deploy": {
+    "startCommand": "sh -c 'export NITRO_PORT=${PORT:-3000} && export NITRO_HOST=0.0.0.0 && node .output/server/index.mjs'",
     "numReplicas": 1,
     "sleepApplication": false,
     "restartPolicyType": "ON_FAILURE",
