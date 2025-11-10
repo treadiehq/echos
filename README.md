@@ -63,7 +63,7 @@ Use anywhere:
 import { EchosRuntime } from '@echoshq/runtime';
 
 const runtime = new EchosRuntime({ 
-  workflow: './workflow.yaml',
+  workflow: './workflow.yaml', // optional
   apiKey: process.env.ECHOS_API_KEY
 });
 
@@ -103,7 +103,7 @@ npx echos "Analyze customer data from the database"
 import { EchosRuntime } from '@echoshq/runtime';
 
 const runtime = new EchosRuntime({
-  workflow: './workflow.yaml',  // optional
+  workflow: './workflow.yaml',  # optional
   apiKey: process.env.ECHOS_API_KEY
 });
 

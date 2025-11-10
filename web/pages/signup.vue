@@ -74,7 +74,7 @@ function isValidEmail(email: string): boolean {
           <p class="text-white font-medium mt-1">{{ email }}</p>
         </div>
 
-        <div class="bg-gray-500/5 border border-gray-500/10 rounded-2xl p-8 backdrop-blur-sm">
+        <div class="bg-gray-500/5 border border-gray-500/10 rounded-lg p-8">
           <div class="space-y-4 text-sm text-gray-400">
             <p>Click the link in the email to complete your sign up and create your organization.</p>
             <p class="text-xs">The link will expire in 15 minutes.</p>

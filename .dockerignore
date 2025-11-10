@@ -9,6 +9,8 @@ server/dist/
 web/.output/
 web/.nuxt/
 *.tsbuildinfo
+!.output
+!public
 
 # Development files
 .git/

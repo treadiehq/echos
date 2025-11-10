@@ -71,9 +71,9 @@ export class AuthService {
     if (this.resend && process.env.NODE_ENV === 'production') {
       try {
         await this.resend.emails.send({
-          from: process.env.FROM_EMAIL || 'auth@echos.dev',
+          from: process.env.FROM_EMAIL || 'Echos <noreply@echoshq.com>',
           to: email,
-          subject: 'Your magic link to sign in',
+          subject: 'Sign in to Echos',
           html: this.getMagicLinkEmailTemplate(magicLinkUrl),
         });
 
@@ -308,16 +308,12 @@ export class AuthService {
           <title>Sign in to Echos</title>
         </head>
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0;">
-            <h1 style="color: white; margin: 0; font-size: 28px;">Echos Runtime</h1>
-          </div>
-          
-          <div style="background: #f9f9f9; padding: 40px; border-radius: 0 0 10px 10px;">
-            <h2 style="color: #333; margin-top: 0;">Sign in to your account</h2>
+          <div style="padding: 40px;">
+            <h2 style="color: #ffffff; margin-top: 0;">Sign in to your account</h2>
             <p style="font-size: 16px; color: #666;">Click the button below to securely sign in to your Echos account:</p>
             
             <div style="text-align: center; margin: 40px 0;">
-              <a href="${magicLink}" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 16px 40px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+              <a href="${magicLink}" style="background: oklch(80.9% 0.105 251.813); color: black; padding: 16px 40px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                 Sign In
               </a>
             </div>
