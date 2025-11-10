@@ -1,10 +1,10 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#667eea] to-[#764ba2] px-4">
+  <div class="min-h-screen flex items-center justify-center px-4 bg-black">
     <div class="max-w-md w-full">
-      <div class="bg-white rounded-lg shadow-xl p-8 text-center">
-        <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-[#667eea] mx-auto mb-4"></div>
-        <h2 class="text-2xl font-bold text-gray-800 mb-2">Verifying your email...</h2>
-        <p class="text-gray-600">Please wait while we sign you in.</p>
+      <div class="bg-gray-500/5 border border-gray-500/10 rounded-lg p-8 text-center">
+        <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-300/60 mx-auto mb-4"></div>
+        <h2 class="text-2xl font-bold text-white mb-2">Verifying your email...</h2>
+        <p class="text-gray-400">Please wait while we sign you in.</p>
       </div>
     </div>
   </div>
