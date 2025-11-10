@@ -25,6 +25,15 @@ export default defineEventHandler((event) => {
     }
     
     const workflowPath = path.join(projectRoot, relativePath);
+    
+    // Check if file exists before reading
+    if (!fs.existsSync(workflowPath)) {
+      return {
+        success: false,
+        error: 'Workflow files not available in production. View workflows locally or configure them via API.'
+      };
+    }
+    
     const content = fs.readFileSync(workflowPath, 'utf8');
     const workflow = parse(content);
     
