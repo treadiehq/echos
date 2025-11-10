@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "nuxt dev",
     "build": "npm run copy-workflows && nuxt build",
-    "copy-workflows": "mkdir -p public/workflows && cp workflow.yaml public/workflows/ && cp -r workflows/examples public/workflows/",
+    "copy-workflows": "mkdir -p public/workflows && cp workflows/workflow.yaml public/workflows/ && cp -r workflows/examples public/workflows/",
     "start": "node .output/server/index.mjs",
     "preview": "nuxt preview"
   },
