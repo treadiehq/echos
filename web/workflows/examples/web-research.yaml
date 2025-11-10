@@ -1,0 +1,65 @@
+# Example: Web Research & Summarization
+# Use case: Search the web and create comprehensive reports
+# Perfect for: Market research, competitive analysis, news monitoring
+
+agents:
+  - name: orchestrator
+    type: orchestrator
+    maxLoops: 4
+    policy:
+      retries:
+        count: 1
+        backoffMs: 250
+      memoryPolicy:
+        readFrom: ["global"]
+        writeTo: "orchestrator"
+      guardrails:
+        maxCostPerInvocation: 0.50
+
+  - name: search_agent
+    type: worker
+    maxLoops: 3
+    policy:
+      retries:
+        count: 2
+        backoffMs: 500
+      memoryPolicy:
+        readFrom: ["global", "orchestrator"]
+        writeTo: "search"
+      guardrails:
+        maxCostPerInvocation: 0.20
+
+  - name: data_agent
+    type: worker
+    maxLoops: 2
+    policy:
+      retries:
+        count: 1
+        backoffMs: 200
+      memoryPolicy:
+        readFrom: ["global", "orchestrator", "search"]
+        writeTo: "analysis"
+      guardrails:
+        maxCostPerInvocation: 2.0  # Higher for comprehensive analysis
+
+routes:
+  orchestrator:
+    canCall: [search_agent, data_agent]
+  search_agent:
+    canCall: [data_agent]
+
+limits:
+  defaultMaxLoops: 4
+  maxDurationMs: 45000   # 45 seconds (web searches can be slow)
+  maxCost: 5.0
+
+memory:
+  global:
+    research_focus: "technology and AI"
+    output_format: "executive summary"
+
+# Example commands to try:
+# npm run echos -- "Search for the latest AI agent frameworks and compare their features"
+# npm run echos -- "Research competitor pricing for SaaS products and create a summary"
+# npm run echos -- "Find recent news about multi-agent systems and analyze trends"
+

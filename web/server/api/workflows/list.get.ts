@@ -46,8 +46,15 @@ export default defineEventHandler(() => {
     // Filter to only existing files and extract names
     const available = workflowDefs
       .map(w => {
-        // Try production path first, then development path
+        // Try multiple paths:
+        // 1. Production: .output/public/workflows
+        // 2. Development: workflows directory in web folder
+        // 3. Fallback: parent directory
         let fullPath = path.join(process.cwd(), '.output/public/workflows', w.path);
+        
+        if (!fs.existsSync(fullPath)) {
+          fullPath = path.join(process.cwd(), 'workflows', w.path);
+        }
         
         if (!fs.existsSync(fullPath)) {
           fullPath = path.join(process.cwd(), '..', w.path);

@@ -1,0 +1,77 @@
+# Example: Database Query & Analysis
+# Use case: Query your database and analyze results with AI
+# Perfect for: Analytics, reporting, data exploration
+
+agents:
+  - name: orchestrator
+    type: orchestrator
+    maxLoops: 3
+    policy:
+      retries:
+        count: 1
+        backoffMs: 250
+      memoryPolicy:
+        readFrom: ["global"]
+        writeTo: "orchestrator"
+      guardrails:
+        maxCostPerInvocation: 0.50
+
+  - name: db_agent
+    type: worker
+    maxLoops: 2
+    policy:
+      retries:
+        count: 2
+        backoffMs: 300
+      memoryPolicy:
+        readFrom: ["global", "orchestrator"]
+        writeTo: "db"
+      guardrails:
+        maxCostPerInvocation: 1.0
+        # Customize for YOUR database tables
+        allowedOperations:
+          - SELECT
+          - INSERT
+          - UPDATE
+        allowedTables:
+          - users
+          - orders
+          - products
+          - customers
+          - transactions
+        requireWhere: true  # Prevents accidental full table updates
+
+  - name: data_agent
+    type: worker
+    maxLoops: 2
+    policy:
+      retries:
+        count: 1
+        backoffMs: 200
+      memoryPolicy:
+        readFrom: ["global", "orchestrator", "db"]
+        writeTo: "analysis"
+      guardrails:
+        maxCostPerInvocation: 1.5
+
+routes:
+  orchestrator:
+    canCall: [db_agent, data_agent]
+  db_agent:
+    canCall: [data_agent]
+
+limits:
+  defaultMaxLoops: 3
+  maxDurationMs: 30000   # 30 seconds max
+  maxCost: 5.0           # $5 max per workflow
+
+memory:
+  global:
+    environment: "production"
+    database_type: "postgresql"
+
+# Example commands to try:
+# npm run echos -- "Get all orders from the last 30 days and summarize revenue by category"
+# npm run echos -- "Query users who signed up this month and analyze their demographics"
+# npm run echos -- "Find top 10 products by sales and create a summary report"
+

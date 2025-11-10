@@ -23,12 +23,19 @@ export default defineEventHandler((event) => {
       };
     }
     
-    // Try to read from copied workflows in public directory first (production)
-    // Fall back to parent directory (local development)
+    // Try multiple paths:
+    // 1. Production: .output/public/workflows (after build)
+    // 2. Development: workflows directory in web folder
+    // 3. Fallback: parent directory (for backward compatibility)
     let workflowPath = path.join(process.cwd(), '.output/public/workflows', relativePath);
     
     if (!fs.existsSync(workflowPath)) {
-      // Try development path
+      // Try local workflows directory
+      workflowPath = path.join(process.cwd(), 'workflows', relativePath);
+    }
+    
+    if (!fs.existsSync(workflowPath)) {
+      // Try parent directory (fallback)
       workflowPath = path.join(process.cwd(), '..', relativePath);
     }
     

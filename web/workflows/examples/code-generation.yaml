@@ -1,0 +1,68 @@
+# Example: AI Code Generation
+# Use case: Generate code snippets and scripts
+# Perfect for: Automation, prototyping, code templates
+
+agents:
+  - name: orchestrator
+    type: orchestrator
+    maxLoops: 2
+    policy:
+      retries:
+        count: 1
+        backoffMs: 250
+      memoryPolicy:
+        readFrom: ["global"]
+        writeTo: "orchestrator"
+      guardrails:
+        maxCostPerInvocation: 0.50
+
+  - name: code_agent
+    type: worker
+    maxLoops: 2
+    policy:
+      retries:
+        count: 2
+        backoffMs: 300
+      memoryPolicy:
+        readFrom: ["global", "orchestrator"]
+        writeTo: "code"
+      guardrails:
+        maxCostPerInvocation: 2.0
+        allowExecution: false  # NEVER enable in production without sandboxing!
+        maxExecutionTime: 5000
+
+  - name: data_agent
+    type: worker
+    maxLoops: 1
+    policy:
+      retries:
+        count: 1
+        backoffMs: 200
+      memoryPolicy:
+        readFrom: ["global", "orchestrator", "code"]
+        writeTo: "review"
+      guardrails:
+        maxCostPerInvocation: 1.0
+
+routes:
+  orchestrator:
+    canCall: [code_agent, data_agent]
+  code_agent:
+    canCall: [data_agent]  # For code review/explanation
+
+limits:
+  defaultMaxLoops: 2
+  maxDurationMs: 30000
+  maxCost: 5.0
+
+memory:
+  global:
+    coding_style: "clean and well-commented"
+    language_preference: "TypeScript"
+
+# Example commands to try:
+# npm run echos -- "Generate a TypeScript function to sort an array of objects by date"
+# npm run echos -- "Create Python code to read a CSV file and calculate statistics"
+# npm run echos -- "Write a bash script to backup a directory with timestamps"
+# npm run echos -- "Generate SQL to create a users table with proper constraints"
+

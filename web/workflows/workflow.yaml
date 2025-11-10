@@ -1,0 +1,129 @@
+# Example: API Integration & Data Processing
+# Use case: Fetch data from APIs and process it
+# Perfect for: Third-party integrations, data pipelines, webhooks
+
+name: "Multi-Agent Orchestrator"
+
+agents:
+  - name: orchestrator
+    type: orchestrator
+    maxLoops: 3
+    policy:
+      retries:
+        count: 1
+        backoffMs: 250
+      memoryPolicy:
+        readFrom: ["global"]
+        writeTo: "orchestrator"
+      guardrails:
+        maxCostPerInvocation: 0.50
+
+  - name: api_agent
+    type: worker
+    maxLoops: 2
+    policy:
+      retries:
+        count: 3  # APIs can be flaky
+        backoffMs: 1000
+      memoryPolicy:
+        readFrom: ["global", "orchestrator"]
+        writeTo: "api"
+      guardrails:
+        maxCostPerInvocation: 0.50
+        # Customize for YOUR allowed APIs
+        allowedDomains:
+          - api.github.com
+          - api.stripe.com
+          - jsonplaceholder.typicode.com
+          - api.openai.com
+          - httpbin.org
+        allowedMethods:
+          - GET
+          - POST
+        blockPrivateIPs: true  # Prevents SSRF attacks
+
+  - name: data_agent
+    type: worker
+    maxLoops: 2
+    policy:
+      retries:
+        count: 1
+        backoffMs: 200
+      memoryPolicy:
+        readFrom: ["global", "orchestrator", "api"]
+        writeTo: "analysis"
+      guardrails:
+        maxCostPerInvocation: 1.5
+
+  - name: code_agent
+    type: worker
+    maxLoops: 1
+    policy:
+      retries:
+        count: 1
+        backoffMs: 200
+      memoryPolicy:
+        readFrom: ["global", "orchestrator"]
+        writeTo: "code"
+      guardrails:
+        maxCostPerInvocation: 0.75
+
+  - name: search_agent
+    type: worker
+    maxLoops: 1
+    policy:
+      retries:
+        count: 2
+        backoffMs: 500
+      memoryPolicy:
+        readFrom: ["global", "orchestrator"]
+        writeTo: "search"
+      guardrails:
+        maxCostPerInvocation: 0.25
+
+  - name: db_agent
+    type: worker
+    maxLoops: 1
+    policy:
+      retries:
+        count: 2
+        backoffMs: 300
+      memoryPolicy:
+        readFrom: ["global", "orchestrator"]
+        writeTo: "database"
+      guardrails:
+        maxCostPerInvocation: 0.10
+
+routes:
+  orchestrator:
+    canCall: [api_agent, data_agent, code_agent, search_agent, db_agent]
+  api_agent:
+    canCall: [data_agent]
+  code_agent:
+    canCall: []
+  search_agent:
+    canCall: [data_agent]
+  db_agent:
+    canCall: [data_agent]
+
+limits:
+  defaultMaxLoops: 3
+  maxDurationMs: 60000   # 60 seconds (APIs can be slow)
+  maxCost: 5.0
+
+memory:
+  global:
+    api_timeout: "30s"
+    retry_strategy: "exponential_backoff"
+
+# Example commands to try:
+# First, add URL to payload programmatically, or modify api_agent to extract from message
+# npm run echos -- "Fetch GitHub repos for vercel and analyze their popularity"
+# npm run echos -- "Get data from jsonplaceholder users endpoint and summarize"
+
+# Note: For API calls, you'll need to provide the URL in the payload:
+# const result = await runtime.run({
+#   task: "Fetch and analyze the data",
+#   memory: { url: "https://api.github.com/repos/vercel/next.js" }
+# });
+
