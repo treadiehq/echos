@@ -79,12 +79,11 @@ async function handleSubmit() {
       <div class="bg-gray-500/5 border border-gray-500/10 rounded-2xl p-8 backdrop-blur-sm">
         <!-- Success State -->
         <div v-if="submitted" class="text-center space-y-4">
-          <div class="w-16 h-16 mx-auto rounded-lg bg-emerald-300/10 border border-emerald-300/10 flex items-center justify-center mb-4">
+          <!-- <div class="w-16 h-16 mx-auto rounded-lg bg-emerald-300/10 border border-emerald-300/10 flex items-center justify-center mb-4">
             <svg class="w-8 h-8 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76" />
             </svg>
-          </div>
-          
+          </div> -->
           <h2 class="text-xl font-semibold text-white">Check your email</h2>
           
           <div class="space-y-3">
