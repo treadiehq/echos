@@ -14,10 +14,6 @@ COPY . .
 # Build the Nuxt app
 RUN npm run build
 
-# Copy public assets to where Nitro expects them
-RUN mkdir -p .output/server/chunks/public && \
-    cp -r .output/public/* .output/server/chunks/public/
-
 # Expose port (Railway will provide $PORT)
 EXPOSE 3000
 
