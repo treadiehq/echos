@@ -4,7 +4,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "sh -c 'echo \"🚀 Starting Echos Frontend\" && echo \"PORT=$PORT\" && echo \"Setting NITRO_HOST=0.0.0.0 NITRO_PORT=$PORT\" && export NITRO_HOST=0.0.0.0 && export NITRO_PORT=$PORT && echo \"Checking .output directory:\" && ls -la .output/server/ && echo \"Starting Nitro...\" && node .output/server/index.mjs'",
+    "startCommand": "sh -c 'echo \"🚀 Starting Echos Frontend on port $PORT\" && NITRO_HOST=0.0.0.0 NITRO_PORT=$PORT node .output/server/index.mjs 2>&1'",
     "numReplicas": 1,
     "sleepApplication": false,
     "restartPolicyType": "ON_FAILURE",
