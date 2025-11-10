@@ -2,6 +2,7 @@ FROM node:20-slim
 
 WORKDIR /app
 
+
 # Copy package files
 COPY package.json package-lock.json ./
 
