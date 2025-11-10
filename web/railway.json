@@ -5,7 +5,7 @@
     "buildCommand": "npm install && npm run build"
   },
   "deploy": {
-    "startCommand": "sh -c 'export NITRO_PORT=${PORT:-3000} && export NITRO_HOST=0.0.0.0 && node .output/server/index.mjs'",
+    "startCommand": "sh -c 'echo \"🚀 Starting Echos Frontend...\" && echo \"PORT: $PORT\" && echo \"Setting NITRO_PORT=$PORT and NITRO_HOST=0.0.0.0\" && export NITRO_PORT=${PORT:-3000} && export NITRO_HOST=0.0.0.0 && echo \"Starting Nitro...\" && exec node .output/server/index.mjs'",
     "numReplicas": 1,
     "sleepApplication": false,
     "restartPolicyType": "ON_FAILURE",
