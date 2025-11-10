@@ -5,6 +5,13 @@ export default defineNuxtConfig({
   nitro: {
     preset: 'node-server',
     serveStatic: true,
+    publicAssets: [
+      {
+        baseURL: '/',
+        dir: 'public',
+        maxAge: 0
+      }
+    ]
   },
   runtimeConfig: {
     public: {
