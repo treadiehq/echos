@@ -27,15 +27,28 @@ if (!existsSync(outputPath)) {
   process.exit(1);
 }
 
-console.log('✅ Output file found, loading Nitro server...');
+console.log('✅ Output file found, starting Nitro server...');
 console.log('========================================\n');
 
-// Import and start the Nitro server
+// Start the Nitro server by executing it
 try {
-  await import('./.output/server/index.mjs');
-  console.log('\n✅ Nitro server module loaded successfully');
+  // Nitro's index.mjs is meant to be executed, not imported
+  // It will start the server when executed
+  const module = await import('./.output/server/index.mjs');
+  console.log('✅ Nitro server started successfully');
+  
+  // Keep the process alive
+  process.on('SIGTERM', () => {
+    console.log('Received SIGTERM, shutting down gracefully...');
+    process.exit(0);
+  });
+  
+  process.on('SIGINT', () => {
+    console.log('Received SIGINT, shutting down gracefully...');
+    process.exit(0);
+  });
 } catch (error) {
-  console.error('\n❌ ERROR loading Nitro server:');
+  console.error('\n❌ ERROR starting Nitro server:');
   console.error(error);
   process.exit(1);
 }
