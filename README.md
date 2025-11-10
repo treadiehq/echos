@@ -125,7 +125,6 @@ View traces at http://localhost:3000
 
 ## Docs
 
-- **[Production](docs/PRODUCTION.md)** - Reliability, monitoring, scaling
 - **[Memory](docs/MEMORY.md)** - How agents share context
 - **[Embedding](docs/EMBEDDING.md)** - Integrate into your app
 - **[Examples](examples/README.md)** - Pre-built templates

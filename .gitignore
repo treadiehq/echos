@@ -6,6 +6,7 @@ dist/
 server/dist/
 web/.output/
 web/.nuxt/
+web/public/workflows/
 *.tsbuildinfo
 
 # Runtime artifacts
