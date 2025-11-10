@@ -34,8 +34,6 @@ function extractWorkflowName(filePath: string): string {
 
 export default defineEventHandler(() => {
   try {
-    const projectRoot = path.resolve(process.cwd(), '..');
-    
     // List of workflow files
     const workflowDefs = [
       { id: 'main', path: 'workflow.yaml' },
@@ -48,7 +46,13 @@ export default defineEventHandler(() => {
     // Filter to only existing files and extract names
     const available = workflowDefs
       .map(w => {
-        const fullPath = path.join(projectRoot, w.path);
+        // Try production path first, then development path
+        let fullPath = path.join(process.cwd(), '.output/public/workflows', w.path);
+        
+        if (!fs.existsSync(fullPath)) {
+          fullPath = path.join(process.cwd(), '..', w.path);
+        }
+        
         if (!fs.existsSync(fullPath)) return null;
         
         const extractedName = extractWorkflowName(fullPath);

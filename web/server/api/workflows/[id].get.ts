@@ -5,7 +5,6 @@ import { parse } from 'yaml';
 export default defineEventHandler((event) => {
   try {
     const id = getRouterParam(event, 'id');
-    const projectRoot = path.resolve(process.cwd(), '..');
     
     // Map workflow IDs to file paths
     const workflowPaths: Record<string, string> = {
@@ -24,13 +23,20 @@ export default defineEventHandler((event) => {
       };
     }
     
-    const workflowPath = path.join(projectRoot, relativePath);
+    // Try to read from copied workflows in public directory first (production)
+    // Fall back to parent directory (local development)
+    let workflowPath = path.join(process.cwd(), '.output/public/workflows', relativePath);
+    
+    if (!fs.existsSync(workflowPath)) {
+      // Try development path
+      workflowPath = path.join(process.cwd(), '..', relativePath);
+    }
     
     // Check if file exists before reading
     if (!fs.existsSync(workflowPath)) {
       return {
         success: false,
-        error: 'Workflow files not available in production. View workflows locally or configure them via API.'
+        error: 'Workflow file not found. Make sure workflow files are available.'
       };
     }
     
