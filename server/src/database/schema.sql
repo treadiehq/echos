@@ -53,6 +53,11 @@ CREATE TABLE IF NOT EXISTS api_keys (
 CREATE INDEX IF NOT EXISTS idx_api_keys_org ON api_keys(org_id);
 CREATE INDEX IF NOT EXISTS idx_api_keys_prefix ON api_keys(key_prefix);
 
+-- Ensure unique names per org for active (non-revoked) keys only
+CREATE UNIQUE INDEX IF NOT EXISTS idx_api_keys_unique_name_per_org 
+  ON api_keys(org_id, name) 
+  WHERE revoked_at IS NULL;
+
 -- Magic link tokens for authentication
 CREATE TABLE IF NOT EXISTS magic_links (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

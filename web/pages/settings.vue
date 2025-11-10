@@ -71,6 +71,16 @@ const createApiKey = async () => {
     return;
   }
 
+  // Check for duplicate name on the frontend
+  const duplicateName = apiKeys.value.some(
+    key => key.name.toLowerCase() === newKeyName.value.trim().toLowerCase()
+  );
+  
+  if (duplicateName) {
+    error.value = 'An API key with this name already exists';
+    return;
+  }
+
   isCreatingKey.value = true;
   error.value = '';
 

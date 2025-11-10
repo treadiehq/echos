@@ -29,6 +29,16 @@ export class ApiKeysService {
       throw new HttpException('Not authorized to create API keys for this organization', HttpStatus.FORBIDDEN);
     }
 
+    // Check if an API key with this name already exists for this organization
+    const existingKey = await this.db.query(
+      `SELECT id FROM api_keys WHERE org_id = $1 AND name = $2 AND revoked_at IS NULL`,
+      [orgId, name]
+    );
+
+    if (existingKey.rows.length > 0) {
+      throw new HttpException('An API key with this name already exists', HttpStatus.CONFLICT);
+    }
+
     // Generate the key
     const key = await this.authService.generateApiKey(userId, orgId, name);
 
