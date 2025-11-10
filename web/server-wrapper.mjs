@@ -32,12 +32,11 @@ console.log('========================================\n');
 
 // Start the Nitro server by executing it
 try {
-  // Nitro's index.mjs is meant to be executed, not imported
-  // It will start the server when executed
-  const module = await import('./.output/server/index.mjs');
-  console.log('✅ Nitro server started successfully');
+  // Nitro's index.mjs automatically starts the server when imported
+  await import('./.output/server/index.mjs');
+  console.log('✅ Nitro server started and listening on', `http://${process.env.HOST}:${process.env.PORT}`);
   
-  // Keep the process alive
+  // Keep the process alive indefinitely
   process.on('SIGTERM', () => {
     console.log('Received SIGTERM, shutting down gracefully...');
     process.exit(0);
@@ -47,6 +46,9 @@ try {
     console.log('Received SIGINT, shutting down gracefully...');
     process.exit(0);
   });
+  
+  // Keep process alive
+  await new Promise(() => {}); // Never resolves, keeps process running
 } catch (error) {
   console.error('\n❌ ERROR starting Nitro server:');
   console.error(error);
