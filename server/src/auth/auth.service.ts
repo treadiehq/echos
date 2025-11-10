@@ -70,11 +70,16 @@ export class AuthService {
     // Send via email in production, log in development
     if (this.resend && process.env.NODE_ENV === 'production') {
       try {
+        const subject = isSignup ? 'Welcome to Echos!' : 'Sign in to Echos';
+        const emailTemplate = isSignup 
+          ? this.getSignUpEmailTemplate(magicLinkUrl)
+          : this.getSignInEmailTemplate(magicLinkUrl);
+
         await this.resend.emails.send({
           from: process.env.FROM_EMAIL || 'Echos <noreply@echoshq.com>',
           to: email,
-          subject: 'Sign in to Echos',
-          html: this.getMagicLinkEmailTemplate(magicLinkUrl),
+          subject: subject,
+          html: emailTemplate,
         });
 
         return {
@@ -298,7 +303,7 @@ export class AuthService {
     return process.env.BASE_URL || 'http://localhost:3000';
   }
 
-  private getMagicLinkEmailTemplate(magicLink: string): string {
+  private getSignInEmailTemplate(magicLink: string): string {
     return `
       <!DOCTYPE html>
       <html>
@@ -320,6 +325,40 @@ export class AuthService {
             
             <p style="font-size: 14px; color: #999; margin-top: 40px;">
               This link will expire in 15 minutes. If you didn't request this email, you can safely ignore it.
+            </p>
+            
+            <p style="font-size: 12px; color: #ccc; margin-top: 30px; padding-top: 30px; border-top: 1px solid #e0e0e0;">
+              Or copy and paste this URL into your browser:<br>
+              <span style="color: #667eea; word-break: break-all;">${magicLink}</span>
+            </p>
+          </div>
+        </body>
+      </html>
+    `;
+  }
+
+  private getSignUpEmailTemplate(magicLink: string): string {
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Welcome to Echos</title>
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="padding: 40px;">
+            <h2 style="color: #ffffff; margin-top: 0;">Welcome to Echos! 🎉</h2>
+            <p style="font-size: 16px; color: #666;">We're excited to have you on board! Click the button below to verify your email and complete your account setup:</p>
+            
+            <div style="text-align: center; margin: 40px 0;">
+              <a href="${magicLink}" style="background: oklch(80.9% 0.105 251.813); color: black; padding: 16px 40px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                Complete Sign Up
+              </a>
+            </div>
+            
+            <p style="font-size: 14px; color: #999; margin-top: 40px;">
+              This link will expire in 15 minutes. If you didn't create an account, you can safely ignore this email.
             </p>
             
             <p style="font-size: 12px; color: #ccc; margin-top: 30px; padding-top: 30px; border-top: 1px solid #e0e0e0;">
