@@ -4,7 +4,6 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "echo 'Starting on port' $PORT && HOST=0.0.0.0 NITRO_PORT=$PORT node .output/server/index.mjs",
     "numReplicas": 1,
     "sleepApplication": false,
     "restartPolicyType": "ON_FAILURE",
