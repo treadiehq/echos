@@ -6,8 +6,8 @@ FROM node:18-slim AS builder
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
-COPY server/package*.json ./server/
+COPY package.json package-lock.json ./
+COPY server/package.json server/package-lock.json ./server/
 
 # Install dependencies
 RUN npm ci && cd server && npm ci
@@ -26,13 +26,13 @@ FROM node:18-slim
 WORKDIR /app
 
 # Install production dependencies only
-COPY package*.json ./
+COPY package.json package-lock.json ./
 RUN npm ci --only=production
 
 # Copy built artifacts from builder
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/server/dist ./server/dist
-COPY --from=builder /app/server/package*.json ./server/
+COPY --from=builder /app/server/package.json /app/server/package-lock.json ./server/
 
 # Install server production dependencies
 RUN cd server && npm ci --only=production
