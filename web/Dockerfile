@@ -18,14 +18,13 @@ RUN npm run build
 RUN mkdir -p .output/server/chunks/public && \
     cp -r .output/public/* .output/server/chunks/public/
 
-# Expose port
+# Expose port (Railway will provide $PORT)
 EXPOSE 3000
 
 # Set environment variables
 ENV NODE_ENV=production
-ENV NITRO_HOST=0.0.0.0
-ENV NITRO_PORT=3000
+ENV HOST=0.0.0.0
 
-# Start the server
-CMD ["node", ".output/server/index.mjs"]
+# Start the server with dynamic port from Railway
+CMD sh -c "NITRO_PORT=${PORT:-3000} node .output/server/index.mjs"
 
