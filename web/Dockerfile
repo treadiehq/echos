@@ -47,5 +47,5 @@ RUN echo "=== RUNNER STAGE: Checking .output structure ===" && \
 EXPOSE 3000
 
 # Start Nitro (it will use $PORT from Railway)
-CMD ["node", ".output/server/index.mjs"]
+CMD sh -c "echo '🔍 Node version:' && node --version && node .output/server/index.mjs"
 
