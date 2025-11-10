@@ -18,159 +18,51 @@ Echos lets you:
 
 ## Quick Start
 
-### Installation
-
-**Option 1: Use the npm package (recommended)**
-
 ```bash
-npm install @echoshq/runtime
-```
-
-**Option 2: Run the full platform locally**
-
-```bash
+# 1. Clone and start the platform
 git clone https://github.com/treadiehq/echos.git
 cd echos
 npm install
 npm run start
-```
 
-This starts: database, API server, and web UI at `http://localhost:3000`
+# 2. Sign up at http://localhost:3000/signup and get your API key
 
----
-
-### 1. Start the Echos platform
-
-The runtime needs the Echos API server running:
-
-```bash
-git clone https://github.com/treadiehq/echos.git
-cd echos
-npm install
-npm run start
-```
-
-### 2. Sign up and get your API key
-
-1. Open `http://localhost:3000/signup`
-2. Create an account
-3. Go to Settings and create an API key
-4. Copy the key to your `.env` file
-
-### 3. Use Echos in your project
-
-Install the runtime:
-
-```bash
+# 3. Install in your project
 npm install @echoshq/runtime
-```
 
-Create your script:
-
-```javascript
-// test.mjs
+# 4. Use it
 import { EchosRuntime, loadWorkflow, builtInAgents } from '@echoshq/runtime';
-import 'dotenv/config';
 
 const runtime = new EchosRuntime(
   loadWorkflow('./workflow.yaml'),
   builtInAgents,
-  {
-    apiKey: process.env.ECHOS_API_KEY,
-    apiUrl: 'http://localhost:4000'
-  }
+  { apiKey: process.env.ECHOS_API_KEY }
 );
 
-const result = await runtime.run({
-  task: 'Tell me a programming joke',
-  memory: {}
-});
+await runtime.run({ task: 'Your task here' });
 
-console.log(result);
+# 5. Watch traces at http://localhost:3000
 ```
 
-Run it:
-
-```bash
-node test.mjs
-```
-
-### 4. Watch it run
-
-Go to `http://localhost:3000` and watch your agents work in real-time! 🎉
+**→ See [Embedding Guide](docs/EMBEDDING_GUIDE.md) for integration examples**
 
 ---
 
-## How it works
+## Commands
 
-1. **Define your workflow** - Create a `workflow.yaml` file with your agents
-2. **Run tasks** - Use the Echos runtime in your code
-3. **Watch the magic** - See traces in the web UI as agents execute
-4. **Debug & iterate** - Click into any trace to see the full execution
-
----
-
-## What's a workflow?
-
-A workflow is just a YAML file that defines your agents:
-
-```yaml
-name: "Multi-Agent Orchestrator"
-
-agents:
-  orchestrator:
-    model: claude-3-5-sonnet-20241022
-    canCall: [code_agent, search_agent, data_agent]
-    
-  code_agent:
-    model: claude-3-5-sonnet-20241022
-    canCall: []
-```
-
-The orchestrator routes tasks to specialized agents. Each agent can call other agents.
-
----
-
-## Useful commands
-
-| Command | What it does |
+| Command | Description |
 |---------|-------------|
 | `npm run start` | Start everything |
 | `npm run stop` | Stop everything |
 | `npm run restart` | Restart everything |
-| `npm run dev:api` | API server only |
-| `npm run dev:ui` | Web UI only |
 
 ---
 
-## Environment variables
+## What's Next?
 
-Create a `.env` file:
-
-```env
-# AI Provider Keys
-ANTHROPIC_API_KEY=sk-ant-...
-OPENAI_API_KEY=sk-...
-
-# Your Echos API Key (get from Settings)
-ECHOS_API_KEY=your-api-key
-ECHOS_API_URL=http://localhost:4000
-
-# Email (for magic links)
-RESEND_API_KEY=re_...
-
-# Database (auto-configured)
-DATABASE_URL=postgresql://user:password@localhost:5432/echos
-JWT_SECRET=your-secret-key
-```
-
----
-
-## Need help?
-
-- Check the code examples in `test-echos.mjs`
-- Look at traces in the UI to debug
-- Modify `workflow.yaml` to add more agents
+- **[Embedding Guide](docs/EMBEDDING_GUIDE.md)** - Integrate Echos into your app
+- **[workflow.yaml](workflow.yaml)** - See example workflow configuration
+- **[examples/](examples/)** - Pre-built workflow templates
 
 ---
 

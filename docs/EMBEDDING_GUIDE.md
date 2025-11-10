@@ -1,45 +1,26 @@
 # Embedding Echos in Your Application
 
-This guide shows you how to integrate Echos Runtime into your application.
+This guide shows you how to integrate Echos into Next.js, Express, and other Node.js applications.
 
 ---
 
-## Quick Start
+## Prerequisites
 
-### 1. Install Echos
+1. **Start the Echos platform:**
+   ```bash
+   git clone https://github.com/treadiehq/echos.git
+   cd echos && npm install && npm run start
+   ```
 
-```bash
-npm install @echoshq/runtime
-```
+2. **Get your API key:**
+   - Sign up at `http://localhost:3000/signup`
+   - Go to Settings → Create API key
+   - Add to your `.env`: `ECHOS_API_KEY=ek_test_...`
 
-### 2. Get your API key
-
-1. Start Echos: `npm run start`
-2. Sign up at `http://localhost:3000/signup`
-3. Go to Settings and create an API key
-4. Add it to your `.env` file
-
-### 3. Use it in your code
-
-```typescript
-import { EchosRuntime, loadWorkflow, builtInAgents } from '@echoshq/runtime';
-
-const runtime = new EchosRuntime(
-  loadWorkflow('./workflow.yaml'),
-  builtInAgents,
-  {
-    apiKey: process.env.ECHOS_API_KEY,    // Required
-    apiUrl: 'http://localhost:4000'        // Required
-  }
-);
-
-const result = await runtime.run({
-  task: 'Analyze sales data for Q4',
-  memory: { year: 2024 }
-});
-
-console.log(result);
-```
+3. **Install the runtime:**
+   ```bash
+   npm install @echoshq/runtime
+   ```
 
 ---
 
@@ -140,7 +121,7 @@ app.listen(3000, () => {
 
 ## Workflow Configuration
 
-Create `workflow.yaml` in your project:
+Create `workflow.yaml` (see [workflow.yaml](../workflow.yaml) for full example):
 
 ```yaml
 name: "My Workflow"
@@ -148,28 +129,10 @@ name: "My Workflow"
 agents:
   orchestrator:
     model: claude-3-5-sonnet-20241022
-    canCall: [code_agent, search_agent, data_agent]
-    
-  code_agent:
-    model: claude-3-5-sonnet-20241022
-    canCall: []
-    
-  search_agent:
-    model: claude-3-5-sonnet-20241022
-    canCall: [data_agent]
-    
-  data_agent:
-    model: claude-3-5-sonnet-20241022
-    canCall: []
-
-routes:
-  orchestrator: [code_agent, search_agent, data_agent]
-  code_agent: []
-  search_agent: [data_agent]
-  data_agent: []
+    canCall: [code_agent, search_agent]
 ```
 
-The orchestrator automatically routes tasks to the appropriate specialized agent.
+**Built-in agents:** orchestrator, code_agent, search_agent, data_agent, api_agent, db_agent
 
 ---
 
@@ -177,43 +140,12 @@ The orchestrator automatically routes tasks to the appropriate specialized agent
 
 ```bash
 # Required
-ECHOS_API_KEY=ek_test_your_key_here
-OPENAI_API_KEY=sk-your-openai-key
+ECHOS_API_KEY=ek_test_...        # From Settings page
+OPENAI_API_KEY=sk-...            # Or ANTHROPIC_API_KEY
 
 # Optional
-ECHOS_API_URL=http://localhost:4000  # Defaults to localhost:4000
-ANTHROPIC_API_KEY=sk-ant-...         # If using Claude models
+ECHOS_API_URL=http://localhost:4000
 ```
-
----
-
-## Viewing Traces
-
-All workflow executions are automatically traced and visible in the Echos UI:
-
-1. Go to `http://localhost:3000`
-2. Click on any trace to see:
-   - Agent routing decisions
-   - LLM calls and responses
-   - Execution time and costs
-   - Errors and debugging info
-
-This makes debugging much easier than reading logs!
-
----
-
-## Built-in Agents
-
-Echos includes these pre-built agents:
-
-- **`orchestrator`** - Routes tasks to specialized agents
-- **`code_agent`** - Generates and analyzes code
-- **`search_agent`** - Searches the web
-- **`data_agent`** - Analyzes and summarizes data
-- **`api_agent`** - Makes HTTP API calls
-- **`db_agent`** - Queries databases
-
-You can use any combination in your workflow.
 
 ---
 
