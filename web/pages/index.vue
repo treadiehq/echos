@@ -473,53 +473,56 @@ onBeforeUnmount(() => {
     <div class="grid grid-cols-[320px_1fr] h-[calc(100vh-73px)] overflow-hidden">
       <!-- Sidebar -->
       <aside class="border-r border-gray-500/15 bg-black/50 overflow-y-auto h-full">
-        <div class="flex-1 w-full px-2 py-2">
-          <div class="relative">
-            <input 
-              v-model="search" 
-              type="text"
-              placeholder="Search traces by ID.." 
-              class="w-full bg-gray-500/5 border border-gray-500/10 rounded-lg px-4 py-2.5 text-xs placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-500/20 focus:border-gray-500/10 transition-all duration-200"
-            />
-            <svg class="absolute top-1/2 -translate-y-1/2 right-3 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.35-4.15a6 6 0 11-12 0 6 6 0 0112 0z" />
-            </svg>
+        <!-- Search & Sort - Only show when there are traces -->
+        <div v-if="traces.length > 0">
+          <div class="flex-1 w-full px-2 py-2">
+            <div class="relative">
+              <input 
+                v-model="search" 
+                type="text"
+                placeholder="Search traces by ID.." 
+                class="w-full bg-gray-500/5 border border-gray-500/10 rounded-lg px-4 py-2.5 text-xs placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-500/20 focus:border-gray-500/10 transition-all duration-200"
+              />
+              <svg class="absolute top-1/2 -translate-y-1/2 right-3 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m1.35-4.15a6 6 0 11-12 0 6 6 0 0112 0z" />
+              </svg>
+            </div>
           </div>
-        </div>
-        
-        <!-- Workflow Filter -->
-        <div v-if="uniqueWorkflows.length > 0" class="px-2 pt-2">
-          <div class="bg-gray-500/5 border border-gray-500/10 rounded-lg p-1">
-            <button
-              @click="workflowFilter = 'all'"
-              class="w-full px-2.5 py-1.5 rounded-md text-[11px] capitalize transition-colors text-left"
-              :class="workflowFilter === 'all' ? 'bg-gray-500/20 text-gray-300' : 'text-gray-500 hover:text-gray-300'"
-            >
-              All Workflows
-            </button>
-            <button
-              v-for="workflow in uniqueWorkflows"
-              :key="workflow"
-              @click="workflowFilter = workflow"
-              class="w-full px-2.5 py-1.5 rounded-md text-[11px] transition-colors text-left truncate"
-              :class="workflowFilter === workflow ? 'bg-gray-500/20 text-gray-300' : 'text-gray-500 hover:text-gray-300'"
-            >
-              {{ workflow }}
-            </button>
+          
+          <!-- Workflow Filter -->
+          <div v-if="uniqueWorkflows.length > 0" class="px-2 pt-2">
+            <div class="bg-gray-500/5 border border-gray-500/10 rounded-lg p-1">
+              <button
+                @click="workflowFilter = 'all'"
+                class="w-full px-2.5 py-1.5 rounded-md text-[11px] capitalize transition-colors text-left"
+                :class="workflowFilter === 'all' ? 'bg-gray-500/20 text-gray-300' : 'text-gray-500 hover:text-gray-300'"
+              >
+                All Workflows
+              </button>
+              <button
+                v-for="workflow in uniqueWorkflows"
+                :key="workflow"
+                @click="workflowFilter = workflow"
+                class="w-full px-2.5 py-1.5 rounded-md text-[11px] transition-colors text-left truncate"
+                :class="workflowFilter === workflow ? 'bg-gray-500/20 text-gray-300' : 'text-gray-500 hover:text-gray-300'"
+              >
+                {{ workflow }}
+              </button>
+            </div>
           </div>
-        </div>
 
-        <div class="flex items-center gap-3 px-2 py-2 text-xs text-gray-500/50">
-          <div class="inline-flex items-center gap-1.5 w-full bg-gray-500/5 border border-gray-500/10 rounded-lg p-1">
-            <button
-              v-for="option in (['recent', 'oldest', 'size'] as const)" 
-              :key="option"
-              @click="sortOption = option"
-              class="px-2.5 py-1 rounded-md capitalize transition-colors text-[11px]"
-              :class="sortOption === option ? 'bg-gray-500/20 text-gray-300' : 'text-gray-500 hover:text-gray-300'"
-            >
-              {{ option === 'size' ? 'Largest' : option }}
-            </button>
+          <div class="flex items-center gap-3 px-2 py-2 text-xs text-gray-500/50">
+            <div class="inline-flex items-center gap-1.5 w-full bg-gray-500/5 border border-gray-500/10 rounded-lg p-1">
+              <button
+                v-for="option in (['recent', 'oldest', 'size'] as const)" 
+                :key="option"
+                @click="sortOption = option"
+                class="px-2.5 py-1 rounded-md capitalize transition-colors text-[11px]"
+                :class="sortOption === option ? 'bg-gray-500/20 text-gray-300' : 'text-gray-500 hover:text-gray-300'"
+              >
+                {{ option === 'size' ? 'Largest' : option }}
+              </button>
+            </div>
           </div>
         </div>
         <div class="p-2 space-y-2">
