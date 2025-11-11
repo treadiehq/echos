@@ -98,7 +98,7 @@ This is like Chrome DevTools time-travel debugging, but for AI agents.
 
 ## One-Click Agent from OpenAPI Spec
 
-**NEW:** Paste any OpenAPI spec → instant production-ready agent.
+** Paste any OpenAPI spec → instant production-ready agent.
 
 Click **"Generate from OpenAPI"** in the UI, paste a Stripe, GitHub, or any API spec, and get:
 
@@ -121,8 +121,6 @@ https://raw.githubusercontent.com/stripe/openapi/master/openapi/spec3.json
 ```
 
 Turn **any API into a natural language interface** in under 30 seconds.
-
-[Read full documentation →](docs/OPENAPI_GENERATOR.md)
 
 ---
 
