@@ -58,6 +58,32 @@ export class AuthService {
       }
     }
 
+    // For sign-up, validate organization name EARLY (before sending magic link)
+    if (isSignup && orgName) {
+      const trimmedOrgName = orgName.trim();
+      
+      // Check reserved names
+      const { isReservedName, isSimilarToReservedName } = await import('../organizations/reserved-names');
+      
+      if (isReservedName(trimmedOrgName)) {
+        throw new Error('This organization name is reserved and cannot be used');
+      }
+      
+      if (isSimilarToReservedName(trimmedOrgName)) {
+        throw new Error('This organization name is too similar to a reserved name');
+      }
+
+      // Check if organization name already exists
+      const existingOrg = await this.db.query(
+        'SELECT id FROM organizations WHERE LOWER(name) = LOWER($1)',
+        [trimmedOrgName]
+      );
+      
+      if (existingOrg.rows.length > 0) {
+        throw new Error('An organization with this name already exists');
+      }
+    }
+
     // Generate token
     const token = nanoid(32);
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
