@@ -178,10 +178,13 @@ function getExampleTask(template: string): string {
 async function run(task: string) {
   const apiKey = process.env.ECHOS_API_KEY;
   if (!apiKey) {
-    console.error(chalk.red("\n❌ ECHOS_API_KEY environment variable is required"));
-    console.error(chalk.gray("   Run 'npx echos init' to set up your environment"));
-    console.error(chalk.gray("   Or sign up at https://echos.ai to get your API key"));
-    console.error(chalk.gray("   Then set: export ECHOS_API_KEY=ek_your_key_here\n"));
+    console.error(chalk.red("\n❌ Missing ECHOS_API_KEY"));
+    console.error(chalk.white("\nFor local development:"));
+    console.error(chalk.gray("  1. Start Echos: ") + chalk.cyan("./start.sh") + chalk.gray(" (or npm run start)"));
+    console.error(chalk.gray("  2. Sign up at: ") + chalk.cyan("http://localhost:3000/signup"));
+    console.error(chalk.gray("  3. Get your API key from Settings"));
+    console.error(chalk.gray("  4. Set: ") + chalk.cyan("export ECHOS_API_KEY=ek_your_key_here"));
+    console.error(chalk.gray("\nOr run: ") + chalk.cyan("npx echos init") + chalk.gray(" to set up your environment\n"));
     process.exit(1);
   }
 
@@ -192,10 +195,33 @@ async function run(task: string) {
 
   console.log(chalk.gray("🔐 Validating API key..."));
   
+  // Show cost estimate before running
+  try {
+    const estimate = rt.estimateCost();
+    if (estimate.hasLLMCalls) {
+      console.log(chalk.yellow("\n💰 Estimated Cost (LLM API calls):"));
+      console.log(chalk.gray(`   Min: $${estimate.minCost.toFixed(4)} | Max: $${estimate.maxCost.toFixed(4)}`));
+      if (estimate.maxCost > 0.10) {
+        console.log(chalk.yellow(`   ⚠️  High cost workflow - consider setting maxLoops limits\n`));
+      } else {
+        console.log(chalk.gray(`   💡 Tip: Set workflow limits to control costs\n`));
+      }
+    }
+  } catch (err) {
+    // Don't fail if cost estimation fails
+    console.log(chalk.gray("⚠️  Could not estimate costs\n"));
+  }
+  
   const res = await rt.run(task);
   console.log(chalk.green("\n✅ Task completed!"));
   console.log(chalk.cyan(`\n📊 View trace: http://localhost:3000/traces/${res.taskId}`));
-  console.log(chalk.gray(`   Organization: ${res.orgId}\n`));
+  console.log(chalk.gray(`   Organization: ${res.orgId}`));
+  
+  // Show actual cost after execution
+  if (res.totals?.cost) {
+    console.log(chalk.yellow(`   💰 Actual cost: $${res.totals.cost.toFixed(4)}`));
+  }
+  console.log();
 }
 
 function showHelp() {

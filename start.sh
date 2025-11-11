@@ -8,10 +8,76 @@ echo ""
 # Change to project directory
 cd "$(dirname "$0")"
 
+# Environment validation
+echo "🔍 Checking environment..."
+
+# Check if Docker is installed
+if ! command -v docker &> /dev/null; then
+  echo "❌ Docker is not installed"
+  echo ""
+  echo "   Echos requires Docker to run PostgreSQL."
+  echo "   Install Docker:"
+  echo "     • macOS: https://docs.docker.com/desktop/install/mac-install/"
+  echo "     • Linux: https://docs.docker.com/engine/install/"
+  echo "     • Windows: https://docs.docker.com/desktop/install/windows-install/"
+  echo ""
+  exit 1
+fi
+
+# Check if Docker is running
+if ! docker info &> /dev/null; then
+  echo "❌ Docker is not running"
+  echo ""
+  echo "   Please start Docker Desktop and try again."
+  echo "     • macOS/Windows: Open Docker Desktop application"
+  echo "     • Linux: sudo systemctl start docker"
+  echo ""
+  exit 1
+fi
+
+echo "   ✓ Docker is running"
+
+# Check if Node.js is installed
+if ! command -v node &> /dev/null; then
+  echo "❌ Node.js is not installed"
+  echo ""
+  echo "   Echos requires Node.js (v18 or higher)."
+  echo "   Install Node.js:"
+  echo "     • https://nodejs.org/ (download LTS version)"
+  echo "     • Or use nvm: https://github.com/nvm-sh/nvm"
+  echo ""
+  exit 1
+fi
+
+# Check Node.js version
+NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
+if [ "$NODE_VERSION" -lt 18 ]; then
+  echo "❌ Node.js version is too old (found v$NODE_VERSION, need v18+)"
+  echo ""
+  echo "   Please upgrade Node.js:"
+  echo "     • https://nodejs.org/ (download LTS version)"
+  echo "     • Or use nvm: nvm install 18"
+  echo ""
+  exit 1
+fi
+
+echo "   ✓ Node.js v$(node -v) installed"
+
+# Check if npm dependencies are installed
+if [ ! -d "node_modules" ] || [ ! -d "server/node_modules" ] || [ ! -d "web/node_modules" ]; then
+  echo "   ⚠️  Dependencies not installed"
+  echo "   Installing npm packages..."
+  echo ""
+  npm install
+  (cd server && npm install)
+  (cd web && npm install)
+  echo ""
+  echo "   ✓ Dependencies installed"
+fi
+
 # Check if required env vars are set
 if [ -z "$OPENAI_API_KEY" ] && [ -z "$ANTHROPIC_API_KEY" ]; then
-  echo "⚠️  Warning: No LLM API keys found in environment"
-  echo "   Set OPENAI_API_KEY or ANTHROPIC_API_KEY to enable AI features"
+  echo "   ⚠️  No LLM API keys found (you'll need this for AI features)"
   echo ""
 fi
 

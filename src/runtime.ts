@@ -46,7 +46,15 @@ export class EchosRuntime {
     // Get API key from config or environment
     const apiKey = config.apiKey || process.env.ECHOS_API_KEY;
     if (!apiKey) {
-      throw new Error('API key is required. Set ECHOS_API_KEY environment variable or pass apiKey in config. Sign up at https://echos.ai to get your API key');
+      throw new Error(
+        'Missing ECHOS_API_KEY.\n\n' +
+        'For local development:\n' +
+        '  1. Start Echos: ./start.sh (or npm run start)\n' +
+        '  2. Sign up at: http://localhost:3000/signup\n' +
+        '  3. Get your API key from Settings\n' +
+        '  4. Set: export ECHOS_API_KEY=ek_your_key_here\n\n' +
+        'Or pass apiKey directly: new EchosRuntime({ apiKey: "ek_..." })'
+      );
     }
     
     this.apiKey = apiKey;
@@ -107,6 +115,60 @@ export class EchosRuntime {
       }
       throw new Error('API key validation failed: Unable to connect to Echos API');
     }
+  }
+
+  /**
+   * Estimate the potential cost of running a workflow
+   * Returns estimated min/max cost based on workflow configuration
+   */
+  estimateCost(): { minCost: number; maxCost: number; breakdown: string; hasLLMCalls: boolean } {
+    const defaultMax = this.cfg.limits?.defaultMaxLoops ?? 3;
+    let minCost = 0;
+    let maxCost = 0;
+    let hasLLMCalls = false;
+    
+    // Average cost estimates per agent type (in USD)
+    const costEstimates: Record<string, { min: number; max: number }> = {
+      'orchestrator': { min: 0.001, max: 0.005 },      // GPT-4o: ~$0.0025-0.005 per call
+      'db_agent': { min: 0.0005, max: 0.003 },         // GPT-4o-mini: ~$0.0005-0.003
+      'api_agent': { min: 0.0005, max: 0.003 },        // GPT-4o-mini: ~$0.0005-0.003
+      'search_agent': { min: 0.0005, max: 0.003 },     // GPT-4o-mini: ~$0.0005-0.003
+      'data_agent': { min: 0.001, max: 0.005 },        // GPT-4o: ~$0.001-0.005
+      'code_agent': { min: 0.001, max: 0.005 },        // GPT-4o: ~$0.001-0.005
+    };
+
+    const breakdown: string[] = [];
+
+    for (const agent of this.cfg.agents) {
+      const maxLoops = agent.maxLoops ?? defaultMax;
+      const estimate = costEstimates[agent.type || agent.name] || { min: 0.001, max: 0.005 };
+      
+      if (agent.type !== 'orchestrator' || agent.name === 'orchestrator') {
+        hasLLMCalls = true;
+      }
+      
+      // Estimate cost for this agent (loops * per-call cost)
+      const agentMinCost = maxLoops * estimate.min;
+      const agentMaxCost = maxLoops * estimate.max;
+      
+      minCost += agentMinCost;
+      maxCost += agentMaxCost;
+      
+      breakdown.push(`  ${agent.name}: $${agentMinCost.toFixed(4)} - $${agentMaxCost.toFixed(4)} (up to ${maxLoops} calls)`);
+    }
+
+    // Apply workflow cost ceiling if set
+    if (this.cfg.limits?.maxCost && maxCost > this.cfg.limits.maxCost) {
+      breakdown.push(`  (Capped at workflow limit: $${this.cfg.limits.maxCost})`);
+      maxCost = Math.min(maxCost, this.cfg.limits.maxCost);
+    }
+
+    return {
+      minCost,
+      maxCost,
+      breakdown: breakdown.join('\n'),
+      hasLLMCalls
+    };
   }
 
   async run(taskOrOpts: string | Omit<RunOptions, "workflow" | "agents">) {
