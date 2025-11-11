@@ -94,8 +94,6 @@ When an agent fails in production, you can now:
 
 This is like Chrome DevTools time-travel debugging, but for AI agents.
 
----
-
 ## Community & Support
 
 Join our Discord community for discussions, support, and updates:
