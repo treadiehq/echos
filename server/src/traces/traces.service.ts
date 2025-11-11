@@ -78,7 +78,8 @@ export class TracesService {
         id,
         org_id,
         workflow_id,
-        created_at,
+        data->>'taskId' as task_id,
+        COALESCE(data->>'startedAt', created_at::text) as created_at,
         octet_length(data::text) as size
        FROM traces
        WHERE org_id = $1
@@ -105,7 +106,8 @@ export class TracesService {
         id,
         org_id,
         workflow_id,
-        created_at,
+        data->>'taskId' as task_id,
+        COALESCE(data->>'startedAt', created_at::text) as created_at,
         octet_length(data::text) as size
        FROM traces
        WHERE workflow_id = $1 AND org_id = $2
@@ -137,6 +139,67 @@ export class TracesService {
     );
 
     return result.rowCount || 0;
+  }
+
+  async replayTrace(traceId: string, orgId: string, modifiedWorkflowConfig: any): Promise<any> {
+    // Get the original trace
+    const originalTrace = await this.getTrace(traceId, orgId);
+    
+    if (!originalTrace) {
+      throw new HttpException('Trace not found', HttpStatus.NOT_FOUND);
+    }
+
+    // Check if trace has the required data for replay
+    if (!originalTrace.data.workflowConfig) {
+      throw new HttpException(
+        'This trace does not contain workflow configuration data. Only traces created after the time-travel debugging feature was added can be replayed.',
+        HttpStatus.BAD_REQUEST
+      );
+    }
+
+    // Import EchosRuntime dynamically to avoid circular dependencies
+    try {
+      const { EchosRuntime } = await import('../../../dist/runtime.js');
+      
+      // Use the API key from environment variables
+      // Note: API keys are hashed in the database for security, so we can't retrieve them
+      const apiKey = process.env.ECHOS_API_KEY;
+      
+      if (!apiKey) {
+        throw new HttpException(
+          'ECHOS_API_KEY environment variable is required for Time-Travel Debug. Please set it in your .env file.',
+          HttpStatus.INTERNAL_SERVER_ERROR
+        );
+      }
+      
+      // Use environment variable for API URL (works in both dev and production)
+      const apiUrl = process.env.ECHOS_API_URL || 'http://localhost:4000';
+      
+      // Create runtime with the modified workflow config directly
+      const runtime = new EchosRuntime({
+        apiKey,
+        apiUrl,
+        workflowConfig: modifiedWorkflowConfig
+      });
+      
+      // Skip API validation since we're running on the server
+      // We're already authenticated via the API endpoint
+      (runtime as any).orgId = orgId;
+      
+      // Replay the trace with the original task and memory
+      const result = await runtime.run({
+        task: originalTrace.data.initialTask || 'Replay trace',
+        memory: originalTrace.data.initialMemory || {}
+      });
+      
+      return result;
+    } catch (error: any) {
+      console.error('Error replaying trace:', error);
+      throw new HttpException(
+        `Failed to replay trace: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
   }
 }
 

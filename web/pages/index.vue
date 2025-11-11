@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppHeader from '../components/AppHeader.vue';
 import Tooltip from '../components/Tooltip.vue';
+import TimeTravelDebugModal from '../components/TimeTravelDebugModal.vue';
 
 definePageMeta({
   middleware: 'auth'
@@ -10,10 +11,12 @@ useHead({
   title: 'Traces - Echos'
 });
 
-type TraceMeta = { id: string; org_id: string; workflow_id?: string; created_at: string; size: number };
+type TraceMeta = { id: string; org_id: string; workflow_id?: string; task_id?: string; created_at: string; size: number };
 type ConnectionStatus = "idle" | "connecting" | "streaming" | "retrying" | "polling" | "disconnected";
 
 const api = useApiBase();
+const auth = useAuth();
+const router = useRouter();
 const { copy, isCopied } = useCopyToClipboard();
 
 const search = ref("");
@@ -69,7 +72,7 @@ const uniqueWorkflows = computed(() => {
 const filteredTraces = computed(() => {
   const q = debouncedSearch.value.trim().toLowerCase();
   let items = traces.value
-    .filter(t => fuzzyMatch(t.id.toLowerCase(), q));
+    .filter(t => fuzzyMatch((t.task_id || t.id).toLowerCase(), q));
 
   // Apply workflow filter
   if (workflowFilter.value !== "all") {
@@ -189,21 +192,45 @@ const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
 
 function formatRelativeTime(timestamp: number | string) {
   // Handle string timestamps (ISO format) or numeric timestamps
-  const ts = typeof timestamp === 'string' ? new Date(timestamp).getTime() : timestamp;
+  let ts: number;
+  
+  if (typeof timestamp === 'string') {
+    // Parse timestamp - JavaScript's Date handles ISO strings with timezones correctly
+    ts = new Date(timestamp).getTime();
+  } else {
+    ts = timestamp;
+  }
   
   // Validate timestamp
   if (!Number.isFinite(ts) || isNaN(ts)) {
     return "Invalid date";
   }
   
-  const diff = ts - Date.now();
+  // Calculate time ago (past timestamps are negative)
+  const now = Date.now();
+  const diff = ts - now;
   const abs = Math.abs(diff);
-  const minute = 1000 * 60;
+  
+  // Define time units
+  const second = 1000;
+  const minute = second * 60;
   const hour = minute * 60;
   const day = hour * 24;
   const week = day * 7;
   const month = day * 30;
   const year = day * 365;
+  
+  // Handle very recent timestamps (< 5 seconds)
+  if (diff > -5 * second && diff < 5 * second) {
+    return "just now";
+  }
+  
+  // If timestamp is in the future (shouldn't happen with correct parsing)
+  if (diff > 0) {
+    console.warn('Timestamp in future:', new Date(ts).toISOString(), 'vs', new Date(now).toISOString());
+    // Treat as past anyway and show the time difference
+    // Don't return "just now" - let it fall through to show actual time
+  }
 
   if (abs < minute) {
     return rtf.format(Math.round(diff / 1000), "second");
@@ -254,7 +281,7 @@ async function loadTraces({ silent = false } = {}) {
     // Don't show errors on empty state - user might not have set up anything yet
     // Only show error if we previously had traces (meaning it was working before)
     if (traces.value.length > 0 && err?.statusCode !== 401 && err?.response?.status !== 401) {
-      listError.value = `Cannot connect to API at ${api}. Make sure the server is running.`;
+      listError.value = `Cannot connect to API. Make sure the server is running.`;
       connection.status = "disconnected";
       connection.lastError = err?.message ?? "Connection lost";
     } else {
@@ -289,8 +316,12 @@ async function fetchTraceDetail(id: string, { silent = false } = {}) {
     const response = await $fetch<any>(`${api}/traces/${id}`, {
       credentials: 'include'
     });
-    // Unwrap the trace data from the database structure
-    detail.value = response.data || response;
+    // Unwrap the trace data but preserve the database ID
+    detail.value = {
+      ...response.data,
+      id: response.id,  // Add database ID for replay endpoint
+      org_id: response.org_id
+    };
   } catch (err: any) {
     console.error("Failed to load trace detail:", err);
     detailError.value = err?.message ?? "Unable to load trace";
@@ -320,15 +351,27 @@ function scheduleReconnect(id: string) {
   }, delay);
 }
 
-function startStream(id: string) {
+async function startStream(id: string) {
   clearDetailTimers();
   connection.status = "connecting";
   if (activeId.value !== id) return;
 
   try {
-    sse = new EventSource(`${api}/traces/${id}/stream`);
+    // Request a secure token for SSE streaming
+    const tokenResponse = await $fetch<{ token: string; expiresIn: number }>(`${api}/traces/${id}/stream-token`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+
+    if (!tokenResponse?.token) {
+      throw new Error('Failed to get stream token');
+    }
+
+    // Use the token in the EventSource URL
+    const streamUrl = `${api}/traces/${id}/stream?token=${encodeURIComponent(tokenResponse.token)}`;
+    sse = new EventSource(streamUrl);
   } catch (err: any) {
-    console.error("Failed to create EventSource:", err);
+    console.error("Failed to start stream:", err?.message || err);
     connection.lastError = err?.message ?? "EventSource error";
     connection.status = "disconnected";
     schedulePolling(id);
@@ -347,14 +390,43 @@ function startStream(id: string) {
 
   sse.addEventListener("update", (event) => {
     try {
-      detail.value = JSON.parse((event as MessageEvent).data);
+      const data = JSON.parse((event as MessageEvent).data);
+      // Preserve the database ID when updating from SSE
+      detail.value = {
+        ...data,
+        id: detail.value?.id,
+        org_id: detail.value?.org_id
+      };
     } catch (err) {
       console.error("Failed to parse SSE payload:", err);
     }
   });
 
   sse.addEventListener("error", (event) => {
-    console.warn("SSE connection lost:", event);
+    // readyState: 0 = CONNECTING, 1 = OPEN, 2 = CLOSED
+    const state = sse?.readyState;
+    
+    // If readyState is 2 (CLOSED), this is a normal closure, not an error
+    if (state === 2) {
+      if (sse) {
+        sse.close();
+        sse = null;
+      }
+      
+      // If trace is completed, this is expected
+      if (detail.value?.status && ['ok', 'error', 'stopped'].includes(detail.value.status)) {
+        connection.status = "idle";
+        return;
+      }
+      
+      // Otherwise fall back to polling
+      connection.status = "disconnected";
+      schedulePolling(activeId.value!);
+      return;
+    }
+    
+    // Real error (readyState 0 = failed to connect)
+    console.warn("SSE connection error, falling back to polling");
     connection.attempts += 1;
     connection.lastError = "Stream disconnected";
     if (sse) {
@@ -378,6 +450,7 @@ function startStream(id: string) {
 async function openTrace(id: string) {
   if (activeId.value === id && detail.value) return;
   activeId.value = id;
+  
   clearDetailTimers();
   connection.attempts = 0;
   await fetchTraceDetail(id);
@@ -385,6 +458,12 @@ async function openTrace(id: string) {
     connection.status = "disconnected";
     return;
   }
+  
+  // Update URL with taskId after detail is loaded
+  if (detail.value?.taskId) {
+    router.replace({ query: { trace: detail.value.taskId } });
+  }
+  
   startStream(id);
 }
 
@@ -401,6 +480,46 @@ async function copyCommand(cmd: string) {
 }
 
 const traceUrl = ref('');
+
+// Time Travel Debug Modal
+const isTimeTravelModalOpen = ref(false);
+
+function openTimeTravelDebug() {
+  if (!detail.value) return;
+  isTimeTravelModalOpen.value = true;
+}
+
+async function deployWorkflowFix(modifiedConfig: any) {
+  if (!detail.value?.workflow_id) {
+    alert('Cannot deploy: No workflow ID found in trace. This trace may have been created without an associated workflow.');
+    return;
+  }
+
+  try {
+    // Convert the modified config to YAML
+    const YAML = await import('yaml');
+    const yamlConfig = YAML.stringify(modifiedConfig);
+
+    // Update the workflow
+    const response = await $fetch(`${api}/workflow/${detail.value.workflow_id}`, {
+      method: 'PATCH',
+      credentials: 'include',
+      body: {
+        yaml_config: yamlConfig
+      }
+    });
+
+    isTimeTravelModalOpen.value = false;
+    
+    // Show success message
+    alert('✅ Workflow configuration updated successfully! All future runs will use the new configuration.');
+    
+    console.log('Workflow updated:', response);
+  } catch (err: any) {
+    console.error('Failed to deploy workflow fix:', err);
+    alert(`Failed to deploy workflow: ${err.message || 'Unknown error'}`);
+  }
+}
 
 // Update trace URL on client side only
 watch(activeId, () => {
@@ -427,16 +546,25 @@ function resetDetail() {
   detailError.value = null;
   connection.status = "idle";
   clearDetailTimers();
+  
+  // Clear URL query parameter when closing trace
+  router.replace({ query: {} });
 }
 
 const isInitialLoad = ref(true);
 
 onMounted(() => {
   // support deep link ?trace=
-  const t = new URLSearchParams(location.search).get('trace');
+  const traceParam = new URLSearchParams(location.search).get('trace');
   loadTraces().then(() => { 
     isInitialLoad.value = false;
-    if (t) openTrace(t); 
+    if (traceParam) {
+      // Find trace by taskId or fall back to database id
+      const trace = traces.value.find(t => t.task_id === traceParam || t.id === traceParam);
+      if (trace) {
+        openTrace(trace.id);
+      }
+    }
   });
   listTimer = setInterval(() => loadTraces({ silent: true }), 5000);
 });
@@ -539,7 +667,7 @@ onBeforeUnmount(() => {
                 {{ listError }}
               </div>
             </div>
-            <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-red-200/80">
+            <!-- <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-red-200/80">
               <div class="flex items-center gap-2">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12M8 11h12M8 15h12M4 7h.01M4 11h.01M4 15h.01" />
@@ -576,7 +704,7 @@ onBeforeUnmount(() => {
                 </svg>
                 <span>{{ isCopied('npm run start:ui') ? 'Copied' : 'Copy' }}</span>
               </button>
-            </div>
+            </div> -->
           </div>
 
           <!-- Loading Skeleton (Initial Load Only) -->
@@ -604,11 +732,11 @@ onBeforeUnmount(() => {
           >
             <div class="flex items-start justify-between gap-3">
               <div class="flex-1 min-w-0">
-                <div class="font-mono text-xs text-white/70 truncate mb-1.5">{{ t.id }}</div>
+                <div class="font-mono text-xs text-white/70 truncate mb-1.5">{{ t.task_id || t.id }}</div>
                 <div class="flex items-center gap-2 text-[11px] text-white/40 uppercase">
                   <span>{{ formatBytes(t.size) }}</span>
                   <span>•</span>
-                  <span :title="new Date(t.created_at).toLocaleString()">{{ formatRelativeTime(new Date(t.created_at).getTime()) }}</span>
+                  <span :title="new Date(t.created_at).toLocaleString()">{{ formatRelativeTime(t.created_at) }}</span>
                 </div>
               </div>
               <div 
@@ -738,13 +866,13 @@ const result = await echos.run({
               </div>
             </div>
             <div class="flex items-center justify-end gap-3 text-sm">
-              <button 
+              <!-- <button 
                 type="button"
                 class="px-3 py-2 rounded-lg bg-gray-500/10 hover:bg-gray-500/15 border border-gray-500/10 text-gray-400 hover:text-white transition"
                 @click="resetDetail"
               >
                 Close
-              </button>
+              </button> -->
               <button 
                 type="button"
                 class="px-3 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-300 transition flex items-center gap-2"
@@ -872,6 +1000,21 @@ npm install <span class="text-amber-300">@echoshq/runtime</span>
               <span class="font-mono">{{ detail.taskId }}</span>
             </div>
             <div class="flex items-center gap-2">
+              <!-- Time Travel Debug Button - Show prominently if trace has error -->
+              <button
+                v-if="detail.workflowConfig"
+                type="button"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition"
+                :class="detail.status === 'error' || detail.status === 'stopped'
+                  ? 'bg-blue-300/5 border border-blue-300/10 text-blue-300 hover:bg-blue-300/10'
+                  : 'bg-gray-500/5 border border-gray-500/10 text-gray-300 hover:bg-gray-500/10 hover:border-gray-500/20'"
+                @click="openTimeTravelDebug"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Time Travel Debug
+              </button>
               <button
                 type="button"
                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-500/5 border border-gray-500/10 text-xs text-gray-300 hover:bg-gray-500/10 hover:border-gray-500/20 transition"
@@ -1149,6 +1292,14 @@ npm install <span class="text-amber-300">@echoshq/runtime</span>
         </div>
       </main>
     </div>
+
+    <!-- Time Travel Debug Modal -->
+    <TimeTravelDebugModal
+      :trace="detail"
+      :is-open="isTimeTravelModalOpen"
+      @close="isTimeTravelModalOpen = false"
+      @deploy="deployWorkflowFix"
+    />
   </div>
 </template>
 

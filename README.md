@@ -80,6 +80,24 @@ await runtime.run({
 
 ---
 
+## Time-Travel Debugging
+
+When an agent fails in production, you can now:
+
+1. Click the failed trace
+2. Click **"Time Travel Debug"**
+3. Edit the workflow config right there
+4. See what WOULD have happened with your changes
+5. Deploy the fix instantly
+
+**You just fixed 47 production failures in 5 minutes.**
+
+This is like Chrome DevTools time-travel debugging, but for AI agents.
+
+[Time-Travel Debugging](docs/TIME_TRAVEL_DEBUG.md)
+
+---
+
 ## Community & Support
 
 Join our Discord community for discussions, support, and updates:
@@ -95,6 +113,7 @@ Join our Discord community for discussions, support, and updates:
 
 ## Features
 
+- **Time-Travel Debugging** - Click any failed trace → Edit config → Test the fix → Deploy. Fix production issues in 60 seconds.
 - **Loop Limiting** - Set `maxLoops` per agent to prevent infinite loops
 - **Retry Logic** - Automatic retries with exponential backoff
 - **Cost Ceilings** - Per-agent and per-workflow cost limits

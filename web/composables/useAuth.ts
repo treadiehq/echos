@@ -26,7 +26,10 @@ export function useAuth() {
       
       return response.user;
     } catch (err: any) {
-      console.error('Failed to fetch current user:', err);
+      // Don't log 401 errors - they're expected when not logged in
+      if (err?.statusCode !== 401 && err?.response?.status !== 401) {
+        console.error('Failed to fetch current user:', err);
+      }
       user.value = null;
       organizations.value = [];
       currentOrg.value = null;

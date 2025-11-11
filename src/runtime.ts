@@ -29,6 +29,7 @@ export interface EchosConfig {
   apiKey?: string;
   apiUrl?: string;
   workflow?: string; // Path to workflow YAML file
+  workflowConfig?: WorkflowConfig; // Direct workflow config object (takes precedence over workflow path)
   workflowName?: string; // Optional workflow name for tracking (overridden by workflow config)
   agents?: Agent[]; // Custom agents to register
 }
@@ -51,21 +52,27 @@ export class EchosRuntime {
     this.apiKey = apiKey;
     this.apiUrl = config.apiUrl || process.env.ECHOS_API_URL || 'http://localhost:4000';
     
-    // Load workflow from file or use default
-    const workflowPath = config.workflow || 'workflow.yaml';
-    try {
-      this.cfg = loadWorkflow(workflowPath);
-    } catch (err) {
-      // If workflow file not found, use a minimal default configuration
-      this.cfg = {
-        name: config.workflowName || 'default-workflow',
-        agents: [
-          { name: 'orchestrator', type: 'orchestrator' }
-        ],
-        routes: {
-          orchestrator: { canCall: [] }
-        }
-      };
+    // Priority: direct config > file path > default
+    if (config.workflowConfig) {
+      // Use the directly provided workflow config
+      this.cfg = config.workflowConfig;
+    } else {
+      // Load workflow from file or use default
+      const workflowPath = config.workflow || 'workflow.yaml';
+      try {
+        this.cfg = loadWorkflow(workflowPath);
+      } catch (err) {
+        // If workflow file not found, use a minimal default configuration
+        this.cfg = {
+          name: config.workflowName || 'default-workflow',
+          agents: [
+            { name: 'orchestrator', type: 'orchestrator' }
+          ],
+          routes: {
+            orchestrator: { canCall: [] }
+          }
+        };
+      }
     }
     
     // Use built-in agents by default, but allow custom agents to be added
@@ -116,7 +123,14 @@ export class EchosRuntime {
     const taskId = randomUUID();
     const ceilings = { maxDurationMs: this.cfg.limits?.maxDurationMs, maxCost: this.cfg.limits?.maxCost };
     const mem: Mem = { ...(this.cfg.memory || {}) };
-    const trace = new TraceStore(taskId, ceilings, Object.keys(mem));
+    const trace = new TraceStore(
+      taskId, 
+      ceilings, 
+      Object.keys(mem),
+      this.cfg, // Store workflow config for time-travel debugging
+      opts.task, // Store initial task
+      opts.memory // Store initial memory
+    );
 
     const defaultMax = this.cfg.limits?.defaultMaxLoops ?? 3;
     const loopState: Record<AgentName, number> = {};
@@ -312,6 +326,41 @@ export class EchosRuntime {
     }
 
     return { taskId, status, error, result: input, totals: { cost: totalCost }, orgId: this.orgId };
+  }
+
+  /**
+   * Time-Travel Debugging: Replay a trace with modified workflow configuration
+   * Uses the original task and memory from the trace, but applies new config
+   */
+  async replay(originalTrace: any, modifiedWorkflowConfig: WorkflowConfig) {
+    // Extract original context from trace
+    const originalTask = originalTrace.initialTask || 'Unknown task';
+    const originalMemory = originalTrace.initialMemory || {};
+    
+    // Temporarily swap the workflow config
+    const originalConfig = this.cfg;
+    this.cfg = modifiedWorkflowConfig;
+    
+    try {
+      // Run with original inputs but new config
+      const result = await this.run({
+        task: originalTask,
+        memory: originalMemory
+      });
+      
+      // Restore original config
+      this.cfg = originalConfig;
+      
+      return {
+        ...result,
+        isReplay: true,
+        originalTraceId: originalTrace.taskId
+      };
+    } catch (error) {
+      // Restore original config even on error
+      this.cfg = originalConfig;
+      throw error;
+    }
   }
 }
 

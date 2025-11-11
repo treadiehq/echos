@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TracesController } from '../traces/traces.controller';
 import { TracesService } from '../traces/traces.service';
+import { StreamTokenService } from '../traces/stream-token.service';
 import { HealthController } from '../health/health.controller';
 import { WorkflowController } from '../workflow/workflow.controller';
 import { WorkflowService } from '../workflow/workflow.service';
@@ -24,6 +25,7 @@ import { ApiKeysModule } from '../api-keys/api-keys.module';
   providers: [
     WorkflowService,
     TracesService,
+    StreamTokenService,
   ],
 })
 export class AppModule {}

@@ -1,4 +1,5 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException, Inject } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { AuthService } from '../auth.service';
 import { Request } from 'express';
 
@@ -14,9 +15,23 @@ declare global {
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(@Inject(AuthService) private authService: AuthService) {}
+  private reflector: Reflector;
+
+  constructor(@Inject(AuthService) private authService: AuthService) {
+    this.reflector = new Reflector();
+  }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    // Check if route is marked as public
+    const isPublic = this.reflector.getAllAndOverride<boolean>('isPublic', [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    
+    if (isPublic) {
+      return true;
+    }
+
     const request = context.switchToHttp().getRequest<Request>();
     
     // Check for session token in cookies

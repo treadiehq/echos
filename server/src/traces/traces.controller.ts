@@ -2,12 +2,17 @@ import { Controller, Get, Post, Delete, Param, Body, Query, Req, Res, UseGuards,
 import type { Request, Response } from 'express';
 import archiver from 'archiver';
 import { TracesService } from './traces.service';
+import { StreamTokenService } from './stream-token.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
+import { Public } from '../auth/decorators/public.decorator';
 
 @Controller('traces')
 @UseGuards(AuthGuard)
 export class TracesController {
-  constructor(@Inject(TracesService) private readonly tracesService: TracesService) {}
+  constructor(
+    @Inject(TracesService) private readonly tracesService: TracesService,
+    @Inject(StreamTokenService) private readonly streamTokenService: StreamTokenService
+  ) {}
 
   @Get()
   async list(@Req() req: Request, @Query('limit') limit?: string) {
@@ -45,6 +50,146 @@ export class TracesController {
     return { trace };
   }
 
+  // Specific routes with :id prefix - MUST be before generic @Get(':id') to avoid route collision
+  
+  // Generate a secure token for SSE streaming (authenticated endpoint)
+  @Post(':id/stream-token')
+  async generateStreamToken(@Param('id') id: string, @Req() req: Request) {
+    const orgId = req.orgId;
+    const userId = req.user?.id;
+    
+    if (!orgId || !userId) {
+      throw new HttpException('Authentication required', HttpStatus.UNAUTHORIZED);
+    }
+
+    // Verify trace exists and belongs to org
+    const trace = await this.tracesService.getTrace(id, orgId);
+    if (!trace) {
+      throw new HttpException('Trace not found', HttpStatus.NOT_FOUND);
+    }
+
+    const token = this.streamTokenService.generateToken(id, orgId, userId);
+    return { token, expiresIn: 300 }; // 5 minutes
+  }
+
+  // Replay trace with modified configuration
+  @Post(':id/replay')
+  async replay(
+    @Param('id') id: string,
+    @Body() body: { workflowConfig: any },
+    @Req() req: Request
+  ) {
+    console.log('Replay endpoint hit:', { id, hasBody: !!body, hasWorkflowConfig: !!body?.workflowConfig });
+    
+    const orgId = req.orgId || req.body.orgId;
+    
+    if (!orgId) {
+      console.log('No orgId found');
+      throw new HttpException('orgId is required', HttpStatus.BAD_REQUEST);
+    }
+
+    if (!body.workflowConfig) {
+      console.log('No workflowConfig in body');
+      throw new HttpException('workflowConfig is required', HttpStatus.BAD_REQUEST);
+    }
+
+    try {
+      console.log('Calling replayTrace service...');
+      const result = await this.tracesService.replayTrace(id, orgId, body.workflowConfig);
+      console.log('Replay successful');
+      return { result };
+    } catch (error: any) {
+      console.error('Replay failed:', error.message);
+      throw new HttpException(
+        `Replay failed: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  @Public() // Public but validated by token
+  @Get(':id/stream')
+  async stream(@Param('id') id: string, @Req() req: Request, @Res() res: Response) {
+    // Set CORS headers immediately
+    res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    
+    // Validate token from query parameter
+    const token = req.query.token as string;
+    
+    if (!token) {
+      return res.status(401).send('Stream token required');
+    }
+
+    const tokenData = this.streamTokenService.validateToken(token);
+    
+    if (!tokenData) {
+      return res.status(401).send('Invalid or expired token');
+    }
+
+    // Verify trace ID matches token
+    if (tokenData.traceId !== id) {
+      return res.status(403).send('Token not valid for this trace');
+    }
+
+    const trace = await this.tracesService.getTrace(id, tokenData.orgId);
+    
+    if (!trace) {
+      return res.status(404).send('Trace not found');
+    }
+
+    // Set status code explicitly
+    res.status(200);
+    
+    // Set up SSE headers
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('X-Accel-Buffering', 'no'); // Disable buffering for nginx/proxies
+
+    // Write headers with explicit status
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache, no-transform',
+      'Connection': 'keep-alive',
+      'Access-Control-Allow-Origin': req.headers.origin || '*',
+      'Access-Control-Allow-Credentials': 'true',
+      'X-Accel-Buffering': 'no'
+    });
+
+    // Send initial data
+    res.write(`event: open\ndata: ${JSON.stringify({ connected: true })}\n\n`);
+
+    // Poll for updates every 2 seconds
+    const intervalId = setInterval(async () => {
+      try {
+        const updatedTrace = await this.tracesService.getTrace(id, tokenData.orgId);
+        if (updatedTrace) {
+          res.write(`event: update\ndata: ${JSON.stringify(updatedTrace.data)}\n\n`);
+          
+          // If trace is completed, close the connection
+          if (updatedTrace.data?.status && ['ok', 'error', 'stopped'].includes(updatedTrace.data.status)) {
+            clearInterval(intervalId);
+            res.end();
+          }
+        }
+      } catch (err) {
+        console.error('Error polling trace:', err);
+        clearInterval(intervalId);
+        res.end();
+      }
+    }, 2000);
+
+    // Clean up on disconnect
+    req.on('close', () => {
+      clearInterval(intervalId);
+    });
+  }
+
+  // Generic :id routes - MUST come after specific routes like :id/replay, :id/stream, etc.
+  
   @Get(':id')
   async read(@Param('id') id: string, @Req() req: Request, @Res() res: Response) {
     const orgId = req.orgId || req.query.orgId as string;
@@ -93,57 +238,6 @@ export class TracesController {
     );
     
     return { traces };
-  }
-
-  @Get(':id/stream')
-  async stream(@Param('id') id: string, @Req() req: Request, @Res() res: Response) {
-    const orgId = req.orgId || req.query.orgId as string;
-    
-    if (!orgId) {
-      return res.status(400).send('orgId is required');
-    }
-
-    const trace = await this.tracesService.getTrace(id, orgId);
-    
-    if (!trace) {
-      return res.status(404).send('Trace not found');
-    }
-
-    // Set up SSE headers
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-
-    // Send initial data
-    res.write(`event: open\ndata: ${JSON.stringify({ connected: true })}\n\n`);
-
-    // Poll for updates every 2 seconds
-    const intervalId = setInterval(async () => {
-      try {
-        const updatedTrace = await this.tracesService.getTrace(id, orgId);
-        if (updatedTrace) {
-          res.write(`event: update\ndata: ${JSON.stringify(updatedTrace.data)}\n\n`);
-          
-          // If trace is completed, close the connection
-          if (updatedTrace.data?.status && ['ok', 'error', 'stopped'].includes(updatedTrace.data.status)) {
-            clearInterval(intervalId);
-            res.end();
-          }
-        }
-      } catch (err) {
-        console.error('Error streaming trace:', err);
-        clearInterval(intervalId);
-        res.end();
-      }
-    }, 2000);
-
-    // Clean up on client disconnect
-    req.on('close', () => {
-      clearInterval(intervalId);
-      res.end();
-    });
   }
 
   @Get(':id/export.zip')
