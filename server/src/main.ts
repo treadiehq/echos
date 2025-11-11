@@ -1,7 +1,9 @@
 import { config } from 'dotenv';
 import { resolve } from 'path';
-// Load .env from project root (parent directory)
-config({ path: resolve(__dirname, '../../.env') });
+// Load .env from project root (parent directory) - only in development
+if (process.env.NODE_ENV !== 'production') {
+  config({ path: resolve(__dirname, '../../.env') });
+}
 
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
