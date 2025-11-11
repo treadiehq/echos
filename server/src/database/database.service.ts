@@ -14,6 +14,15 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       throw new Error('DATABASE_URL environment variable is required');
     }
 
+    // Debug: Log connection string structure (hide password)
+    try {
+      const url = new URL(connectionString);
+      const maskedPassword = url.password ? '***' + url.password.slice(-4) : 'NONE';
+      console.log(`🔍 Connecting to: ${url.protocol}//${url.username}:${maskedPassword}@${url.host}${url.pathname}`);
+    } catch (e) {
+      console.log('🔍 DATABASE_URL format invalid');
+    }
+
     this.pool = new Pool({
       connectionString,
       max: 20,
