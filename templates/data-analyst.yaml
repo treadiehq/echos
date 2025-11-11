@@ -1,0 +1,52 @@
+# Data Analyst Agent
+# Perfect for: SQL queries, data analysis, report generation, trends
+# Uses: Database queries + Data analysis
+
+name: "Data Analyst Agent"
+
+agents:
+  - name: orchestrator
+    type: orchestrator
+    maxLoops: 3
+    policy:
+      retries:
+        count: 1
+        backoffMs: 250
+      memoryPolicy:
+        readFrom: ["global"]
+        writeTo: "orchestrator"
+      guardrails:
+        maxCostPerInvocation: 0.50
+    
+  - name: db_agent
+    type: worker
+    maxLoops: 2
+    policy:
+      retries:
+        count: 2
+        backoffMs: 300
+      memoryPolicy:
+        readFrom: ["global", "orchestrator"]
+        writeTo: "database"
+      guardrails:
+        maxCostPerInvocation: 0.50
+        # Read-only access for data analysis
+        allowedOperations: [SELECT]
+        
+  - name: data_agent
+    type: worker
+    maxLoops: 3
+    policy:
+      retries:
+        count: 1
+        backoffMs: 200
+      memoryPolicy:
+        readFrom: ["global", "orchestrator", "database"]
+        writeTo: "analysis"
+      guardrails:
+        maxCostPerInvocation: 1.5
+
+routes:
+  orchestrator:
+    canCall: [db_agent, data_agent]
+

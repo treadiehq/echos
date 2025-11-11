@@ -123,19 +123,28 @@ Join our Discord community for discussions, support, and updates:
 ## Quick Start
 
 ```bash
-# Start the platform
+# 1. Start the platform
 git clone https://github.com/treadiehq/echos.git
 cd echos && npm install && npm run start
 
-# Sign up at http://localhost:3000/signup and get your API key
+# 2. Sign up at http://localhost:3000/signup and get your API key
 
-# Install in your project
+# 3. Install in your project
 npm install @echoshq/runtime
 
-# Use it
-npx echos "Analyze customer data from the database"
+# 4. Initialize your workflow (2-minute setup)
+npx echos init
 
-# Or in code
+# Choose from pre-built templates:
+# Customer Support - Database + Search + Analysis
+# Stripe Billing - API Integration + Analysis  
+# Data Analyst - SQL + Analysis
+# Custom - Build your own
+
+# 5. Run your agent
+npx echos "Analyze customer sentiment from database"
+
+# Or use in code
 import { EchosRuntime } from '@echoshq/runtime';
 
 const runtime = new EchosRuntime({
@@ -164,10 +173,12 @@ View traces at http://localhost:3000
 
 | Command | Description |
 |---------|-------------|
-| `npm run start` | Start everything |
+| `npx echos init` | Initialize a new workflow with templates |
+| `npx echos "task"` | Run a task with your agents |
+| `npx echos --help` | Show CLI help |
+| `npm run start` | Start the platform (server + web) |
 | `npm run stop` | Stop everything |
 | `npm run restart` | Restart everything |
-| `npm run echos -- "task"` | Run a task (dev) |
 
 ---
 

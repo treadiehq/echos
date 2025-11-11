@@ -1,0 +1,66 @@
+# Customer Support Agent
+# Perfect for: Customer Q&A, ticket analysis, order lookups
+# Uses: Database queries + Web search + Data analysis
+
+name: "Customer Support Agent"
+
+agents:
+  - name: orchestrator
+    type: orchestrator
+    maxLoops: 3
+    policy:
+      retries:
+        count: 1
+        backoffMs: 250
+      memoryPolicy:
+        readFrom: ["global"]
+        writeTo: "orchestrator"
+      guardrails:
+        maxCostPerInvocation: 0.50
+    
+  - name: db_agent
+    type: worker
+    maxLoops: 2
+    policy:
+      retries:
+        count: 2
+        backoffMs: 300
+      memoryPolicy:
+        readFrom: ["global", "orchestrator"]
+        writeTo: "database"
+      guardrails:
+        maxCostPerInvocation: 0.30
+        # Customize these for YOUR database
+        allowedTables: [customers, orders, tickets, products]
+        allowedOperations: [SELECT]
+        
+  - name: search_agent
+    type: worker
+    maxLoops: 1
+    policy:
+      retries:
+        count: 2
+        backoffMs: 500
+      memoryPolicy:
+        readFrom: ["global", "orchestrator"]
+        writeTo: "search"
+      guardrails:
+        maxCostPerInvocation: 0.25
+        
+  - name: data_agent
+    type: worker
+    maxLoops: 2
+    policy:
+      retries:
+        count: 1
+        backoffMs: 200
+      memoryPolicy:
+        readFrom: ["global", "orchestrator", "database", "search"]
+        writeTo: "analysis"
+      guardrails:
+        maxCostPerInvocation: 1.0
+
+routes:
+  orchestrator:
+    canCall: [db_agent, search_agent, data_agent]
+

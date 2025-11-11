@@ -1,6 +1,6 @@
 {
   "name": "@echoshq/runtime",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Multi-agent workflow runtime with intelligent routing, guardrails, and observability",
   "type": "module",
   "main": "./dist/index.js",
@@ -16,7 +16,8 @@
     "README.md",
     "LICENSE",
     "workflow.yaml",
-    "examples"
+    "examples",
+    "templates"
   ],
   "bin": {
     "echos": "./dist/cli.js"
@@ -65,21 +66,24 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "yaml": "^2.4.0",
-    "zod": "^3.23.8",
-    "uuid": "^10.0.0",
-    "date-fns": "^3.6.0",
-    "openai": "^4.73.1",
     "@anthropic-ai/sdk": "^0.32.1",
-    "pg": "^8.13.1",
+    "@types/inquirer": "^9.0.9",
+    "chalk": "^5.6.2",
+    "date-fns": "^3.6.0",
     "dotenv": "^16.4.7",
-    "node-fetch": "^3.3.2"
+    "inquirer": "^12.11.0",
+    "node-fetch": "^3.3.2",
+    "openai": "^4.73.1",
+    "pg": "^8.13.1",
+    "uuid": "^10.0.0",
+    "yaml": "^2.4.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
-    "typescript": "^5.6.0",
-    "tsx": "^4.19.0",
     "@types/node": "^22.7.0",
     "@types/pg": "^8.11.10",
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
   }
 }

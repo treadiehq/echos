@@ -1,0 +1,57 @@
+# Stripe Billing Agent
+# Perfect for: Subscription management, payment processing, customer billing
+# Uses: Stripe API + Data analysis
+
+name: "Stripe Billing Agent"
+
+agents:
+  - name: orchestrator
+    type: orchestrator
+    maxLoops: 3
+    policy:
+      retries:
+        count: 1
+        backoffMs: 250
+      memoryPolicy:
+        readFrom: ["global"]
+        writeTo: "orchestrator"
+      guardrails:
+        maxCostPerInvocation: 0.50
+    
+  - name: api_agent
+    type: worker
+    maxLoops: 2
+    policy:
+      retries:
+        count: 3  # APIs can be flaky
+        backoffMs: 1000
+      memoryPolicy:
+        readFrom: ["global", "orchestrator"]
+        writeTo: "api"
+      guardrails:
+        maxCostPerInvocation: 0.50
+        # Stripe API configuration
+        allowedDomains:
+          - api.stripe.com
+        allowedMethods:
+          - GET
+          - POST
+        blockPrivateIPs: true  # Prevents SSRF attacks
+        
+  - name: data_agent
+    type: worker
+    maxLoops: 2
+    policy:
+      retries:
+        count: 1
+        backoffMs: 200
+      memoryPolicy:
+        readFrom: ["global", "orchestrator", "api"]
+        writeTo: "analysis"
+      guardrails:
+        maxCostPerInvocation: 1.0
+
+routes:
+  orchestrator:
+    canCall: [api_agent, data_agent]
+
