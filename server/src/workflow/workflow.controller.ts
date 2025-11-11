@@ -13,12 +13,6 @@ export class WorkflowController {
     @Body() body: { orgId: string; name: string; yamlConfig: string; description?: string },
     @Req() req: Request
   ) {
-    console.log('[WorkflowController] Create workflow request received');
-    console.log('[WorkflowController] Body keys:', Object.keys(body));
-    console.log('[WorkflowController] orgId:', body.orgId);
-    console.log('[WorkflowController] name:', body.name);
-    console.log('[WorkflowController] yamlConfig length:', body.yamlConfig?.length);
-    
     if (!body.orgId || !body.name || !body.yamlConfig) {
       throw new HttpException('orgId, name, and yamlConfig are required', HttpStatus.BAD_REQUEST);
     }
@@ -32,7 +26,6 @@ export class WorkflowController {
         body.description
       );
 
-      console.log('[WorkflowController] Workflow created successfully:', workflow.id);
       return { workflow };
     } catch (error) {
       console.error('[WorkflowController] Error creating workflow:', error);
@@ -118,7 +111,6 @@ export class WorkflowController {
 
     try {
       const result = await this.workflowService.getDiagram(workflowId, orgId);
-      console.log('[WorkflowController] getDiagram result:', result);
       return result;
     } catch (e) {
       console.error('[WorkflowController] getDiagram error:', e);
@@ -159,7 +151,6 @@ export class WorkflowController {
 
     try {
       const result = await this.workflowService.getConfig(workflowId, orgId);
-      console.log('[WorkflowController] getConfig result:', JSON.stringify(result).substring(0, 200));
       return result;
     } catch (e) {
       console.error('[WorkflowController] getConfig error:', e);

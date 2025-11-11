@@ -9,11 +9,7 @@ export class OpenAPIController {
   constructor(
     @Inject(OpenAPIParserService) private readonly parser: OpenAPIParserService,
     @Inject(WorkflowGeneratorService) private readonly generator: WorkflowGeneratorService,
-  ) {
-    console.log('[OpenAPIController] Constructor called with explicit @Inject');
-    console.log('[OpenAPIController] Parser injected:', !!this.parser);
-    console.log('[OpenAPIController] Generator injected:', !!this.generator);
-  }
+  ) {}
 
   /**
    * Parse OpenAPI spec and return structured data
@@ -65,24 +61,12 @@ export class OpenAPIController {
     },
   ) {
     try {
-      console.log('[OpenAPIController] Generate called');
-      console.log('[OpenAPIController] Parser service exists:', !!this.parser);
-      console.log('[OpenAPIController] Generator service exists:', !!this.generator);
-      console.log('[OpenAPIController] Body:', { specType: typeof body.spec });
-
-      if (!this.parser) {
-        console.error('[OpenAPIController] CRITICAL: parser is undefined!');
-        throw new Error('Parser service not initialized');
-      }
-
       if (!body.spec) {
         throw new HttpException('spec is required', HttpStatus.BAD_REQUEST);
       }
 
-      console.log('[OpenAPIController] About to call parser.parseSpec...');
       // Parse the spec
       const parsed = await this.parser.parseSpec(body.spec);
-      console.log('[OpenAPIController] Parsing completed successfully');
 
       // Generate workflow
       const workflow = this.generator.generateWorkflow(parsed, body.options || {});
