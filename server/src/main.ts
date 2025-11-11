@@ -1,7 +1,8 @@
 import { config } from 'dotenv';
 import { resolve } from 'path';
-// Load .env from project root (parent directory) - only in development
-if (process.env.NODE_ENV !== 'production') {
+// Load .env from project root (parent directory) - only in local development
+// Skip if RAILWAY_ENVIRONMENT is set (Railway deployment) or NODE_ENV is production
+if (!process.env.RAILWAY_ENVIRONMENT && process.env.NODE_ENV !== 'production') {
   config({ path: resolve(__dirname, '../../.env') });
 }
 
