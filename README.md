@@ -7,6 +7,7 @@
 ## The Problem
 
 Building multi-agent AI systems means rebuilding the same things over and over:
+
 - Orchestrators that route tasks
 - Database agents with SQL guardrails  
 - Retry logic and backoff strategies
@@ -57,6 +58,26 @@ routes:
     canCall: [db_agent, data_agent]
 ```
 
+---
+
+## Security & Data Privacy
+
+Echos is **local-first** and designed for sensitive data:
+
+- **Your workflow data never leaves your machine** - All execution happens locally
+- **Runs on localhost** - No external dependencies required
+- **API keys authenticate to YOUR local server** - Not an external service (localhost:4000)
+- **Optional external calls** - Only LLM APIs (OpenAI, Anthropic) go external. Use local models (Ollama) for complete data isolation
+- **Multi-tenant ready** - Organization isolation built-in
+
+**For Production:**
+
+- Self-host in your VPC using Docker/Docker Compose
+- Perfect for HIPAA, SOC2, and compliance requirements
+- Deploy to any infrastructure (AWS, GCP, Azure, Railway)
+- Your data never touches our servers
+
+---
 Use anywhere:
 
 ```typescript
@@ -108,6 +129,7 @@ Click **"Generate from OpenAPI"** in the UI, paste a Stripe, GitHub, or any API 
 - ✅ **Instant deployment** - Preview, customize, and save in seconds
 
 **Example:**
+
 ```bash
 # Paste this URL:
 https://raw.githubusercontent.com/stripe/openapi/master/openapi/spec3.json
@@ -131,6 +153,7 @@ Join our Discord community for discussions, support, and updates:
 [![Discord](https://img.shields.io/badge/Discord-Join%20our%20community-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/KqdBcqRk5E)
 
 ---
+
 ## Dashboard
 
 ![Echos Dashboard](web/assets/img/dashboard.png)
@@ -150,14 +173,18 @@ Join our Discord community for discussions, support, and updates:
 
 ---
 
-## Quick Start
+## Quick Start (100% Local)
+
+Everything runs on your machine—no external services required.
 
 ```bash
-# 1. Start the platform
+# 1. Start Echos locally (starts PostgreSQL + server + web UI)
 git clone https://github.com/treadiehq/echos.git
-cd echos && npm install && npm run start
+cd echos
+./start.sh  # Or: npm install && npm run start
 
-# 2. Sign up at http://localhost:3000/signup and get your API key
+# 2. Create account at http://localhost:3000/signup
+# Get your API key (authenticates to YOUR local server at localhost:4000)
 
 # 3. Install in your project
 npm install @echoshq/runtime
@@ -186,7 +213,30 @@ const runtime = new EchosRuntime({
 await runtime.run('Your task');
 ```
 
-View traces at http://localhost:3000
+View traces at <http://localhost:3000>
+
+---
+
+## Deployment Options
+
+### Local Development (Default)
+
+```bash
+./start.sh  # Everything on localhost - your data stays local
+```
+
+### Self-Hosted Production
+
+```bash
+# Option 1: Docker Compose (recommended)
+docker-compose up -d
+
+# Option 2: Deploy to your infrastructure
+# Works with Railway, AWS ECS, GCP Cloud Run, Azure, Kubernetes
+# Your Echos instance runs in YOUR environment
+```
+
+**Need help with production deployment?** Join our [Discord](https://discord.gg/KqdBcqRk5E) for support.
 
 ---
 
@@ -203,12 +253,12 @@ View traces at http://localhost:3000
 
 | Command | Description |
 |---------|-------------|
+| `./start.sh` | Start Echos locally (PostgreSQL + server + web) |
+| `./stop.sh` | Stop everything |
+| `./restart.sh` | Restart everything |
 | `npx echos init` | Initialize a new workflow with templates |
 | `npx echos "task"` | Run a task with your agents |
 | `npx echos --help` | Show CLI help |
-| `npm run start` | Start the platform (server + web) |
-| `npm run stop` | Stop everything |
-| `npm run restart` | Restart everything |
 
 ---
 
