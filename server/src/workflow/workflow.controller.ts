@@ -17,15 +17,23 @@ export class WorkflowController {
       throw new HttpException('orgId, name, and yamlConfig are required', HttpStatus.BAD_REQUEST);
     }
 
-    const workflow = await this.workflowService.createWorkflow(
-      req.orgId || body.orgId,
-      req.user.id,
-      body.name,
-      body.yamlConfig,
-      body.description
-    );
+    try {
+      const workflow = await this.workflowService.createWorkflow(
+        req.orgId || body.orgId,
+        req.user.id,
+        body.name,
+        body.yamlConfig,
+        body.description
+      );
 
-    return { workflow };
+      return { workflow };
+    } catch (error) {
+      console.error('[WorkflowController] Error creating workflow:', error);
+      throw new HttpException(
+        error instanceof Error ? error.message : 'Failed to create workflow',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
   }
 
   @Get()
@@ -103,7 +111,6 @@ export class WorkflowController {
 
     try {
       const result = await this.workflowService.getDiagram(workflowId, orgId);
-      console.log('[WorkflowController] getDiagram result:', result);
       return result;
     } catch (e) {
       console.error('[WorkflowController] getDiagram error:', e);
@@ -144,7 +151,6 @@ export class WorkflowController {
 
     try {
       const result = await this.workflowService.getConfig(workflowId, orgId);
-      console.log('[WorkflowController] getConfig result:', JSON.stringify(result).substring(0, 200));
       return result;
     } catch (e) {
       console.error('[WorkflowController] getConfig error:', e);

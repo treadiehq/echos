@@ -10,6 +10,8 @@
     "preview": "nuxt preview"
   },
   "dependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "js-yaml": "^4.1.0",
     "mermaid": "^11.12.1",
     "nuxt": "^3.13.0",
     "yaml": "^2.4.0"

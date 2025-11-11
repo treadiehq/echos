@@ -9,6 +9,7 @@ import { DatabaseModule } from '../database/database.module';
 import { AuthModule } from '../auth/auth.module';
 import { OrganizationsModule } from '../organizations/organizations.module';
 import { ApiKeysModule } from '../api-keys/api-keys.module';
+import { OpenAPIModule } from '../openapi/openapi.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { ApiKeysModule } from '../api-keys/api-keys.module';
     AuthModule,
     OrganizationsModule,
     ApiKeysModule,
+    OpenAPIModule,
   ],
   controllers: [
     HealthController,
