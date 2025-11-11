@@ -11,6 +11,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './modules/app.module';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import express from 'express';
 
 async function bootstrap() {
   // CORS Configuration - must be done BEFORE creating the app
@@ -25,8 +26,13 @@ async function bootstrap() {
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],
       exposedHeaders: ['Set-Cookie'],
-    }
+    },
+    bodyParser: true,
   });
+  
+  // Increase body size limit for large OpenAPI specs
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ limit: '50mb', extended: true }));
   
   // Cookie parser
   app.use(cookieParser());

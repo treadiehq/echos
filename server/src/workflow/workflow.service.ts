@@ -24,21 +24,33 @@ export class WorkflowService {
     yamlConfig: string,
     description?: string
   ): Promise<Workflow> {
+    console.log('[WorkflowService] Creating workflow:', { orgId, userId, name, yamlConfigLength: yamlConfig.length });
+    
     // Validate YAML
     try {
-      yaml.parse(yamlConfig);
+      console.log('[WorkflowService] Validating YAML...');
+      const parsed = yaml.parse(yamlConfig);
+      console.log('[WorkflowService] YAML valid, agents count:', parsed?.agents?.length || 0);
     } catch (error) {
-      throw new HttpException('Invalid YAML configuration', HttpStatus.BAD_REQUEST);
+      console.error('[WorkflowService] YAML validation failed:', error);
+      throw new HttpException('Invalid YAML configuration: ' + (error instanceof Error ? error.message : String(error)), HttpStatus.BAD_REQUEST);
     }
 
-    const result = await this.db.query(
-      `INSERT INTO workflows (org_id, name, description, yaml_config, created_by)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING *`,
-      [orgId, name, description, yamlConfig, userId]
-    );
+    try {
+      console.log('[WorkflowService] Inserting into database...');
+      const result = await this.db.query(
+        `INSERT INTO workflows (org_id, name, description, yaml_config, created_by)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING *`,
+        [orgId, name, description, yamlConfig, userId]
+      );
 
-    return result.rows[0];
+      console.log('[WorkflowService] Workflow created successfully, ID:', result.rows[0]?.id);
+      return result.rows[0];
+    } catch (error) {
+      console.error('[WorkflowService] Database insert failed:', error);
+      throw new HttpException('Failed to save workflow to database: ' + (error instanceof Error ? error.message : String(error)), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   async getWorkflow(workflowId: string, orgId: string): Promise<Workflow | null> {

@@ -1,0 +1,120 @@
+# Auto-generated Stripe API Agent
+# Generated from OpenAPI spec: https://raw.githubusercontent.com/stripe/openapi/master/openapi/spec3.json
+# 
+# This workflow was created using Echos' "Generate from OpenAPI" feature.
+# Simply paste any OpenAPI 3.x spec and get an instant agent with:
+# - Auto-configured guardrails
+# - Domain allowlisting
+# - HTTP method restrictions  
+# - Complete API documentation in memory
+
+name: Stripe API Agent
+
+agents:
+  - name: orchestrator
+    type: orchestrator
+    maxLoops: 3
+    policy:
+      retries:
+        count: 1
+        backoffMs: 250
+      memoryPolicy:
+        readFrom:
+          - global
+        writeTo: orchestrator
+      guardrails:
+        maxCostPerInvocation: 0.5
+  - name: api_agent
+    type: worker
+    maxLoops: 2
+    policy:
+      retries:
+        count: 3
+        backoffMs: 1000
+      memoryPolicy:
+        readFrom:
+          - global
+          - orchestrator
+        writeTo: api
+      guardrails:
+        maxCostPerInvocation: 0.5
+        allowedDomains:
+          - api.stripe.com
+        allowedMethods:
+          - DELETE
+          - GET
+          - POST
+        blockPrivateIPs: true
+routes:
+  orchestrator:
+    canCall:
+      - api_agent
+limits:
+  defaultMaxLoops: 3
+  maxDurationMs: 60000
+  maxCost: 5
+memory:
+  global:
+    api_spec:
+      title: Stripe API
+      version: "2023-10-16"
+      baseUrl: https://api.stripe.com
+      description: >-
+        The Stripe REST API. Please see https://stripe.com/docs/api for more
+        details.
+      endpoints:
+        # Grouped by category/tag
+        # Each endpoint includes: path, method, summary, parameters
+        # 
+        # Example endpoints (actual spec has 200+):
+        Customers:
+          - path: /v1/customers
+            method: GET
+            summary: List all customers
+            operationId: GetCustomers
+            parameters:
+              - name: limit
+                in: query
+                required: false
+                type: integer
+                description: A limit on the number of objects to be returned
+              - name: starting_after
+                in: query
+                required: false
+                type: string
+                description: Cursor for pagination
+          - path: /v1/customers
+            method: POST
+            summary: Create a customer
+            operationId: PostCustomers
+            parameters:
+              - name: email
+                in: query
+                required: false
+                type: string
+                description: Customer's email address
+          - path: /v1/customers/{customer}
+            method: GET
+            summary: Retrieve a customer
+            operationId: GetCustomersCustomer
+            parameters:
+              - name: customer
+                in: path
+                required: true
+                type: string
+                description: Customer ID
+    auth:
+      type: bearer
+      instructions: Set Authorization: Bearer YOUR_TOKEN in request headers
+
+# Example usage:
+# 
+# const echos = new EchosRuntime({ workflow: 'generated-stripe-agent.yaml' });
+# 
+# await echos.run({
+#   task: "Create a new customer with email john@example.com",
+#   memory: {
+#     stripe_api_key: process.env.STRIPE_SECRET_KEY
+#   }
+# });
+

@@ -2,6 +2,7 @@
 import AppHeader from '../components/AppHeader.vue';
 import Tooltip from '../components/Tooltip.vue';
 import TimeTravelDebugModal from '../components/TimeTravelDebugModal.vue';
+import OpenAPIGeneratorModal from '../components/OpenAPIGeneratorModal.vue';
 
 definePageMeta({
   middleware: 'auth'
@@ -17,6 +18,7 @@ type ConnectionStatus = "idle" | "connecting" | "streaming" | "retrying" | "poll
 const api = useApiBase();
 const auth = useAuth();
 const router = useRouter();
+const toast = useToast();
 const { copy, isCopied } = useCopyToClipboard();
 
 const search = ref("");
@@ -512,7 +514,7 @@ async function deployWorkflowFix(modifiedConfig: any) {
     isTimeTravelModalOpen.value = false;
     
     // Show success message
-    alert('✅ Workflow configuration updated successfully! All future runs will use the new configuration.');
+    alert('Workflow configuration updated successfully! All future runs will use the new configuration.');
     
     console.log('Workflow updated:', response);
   } catch (err: any) {
@@ -552,6 +554,19 @@ function resetDetail() {
 }
 
 const isInitialLoad = ref(true);
+const showOpenAPIGenerator = ref(false);
+
+function handleWorkflowSaved(workflowId: string) {
+  console.log('Workflow saved:', workflowId);
+  
+  // Show success toast notification
+  toast.success('Workflow saved successfully! Redirecting to Workflow page...', 3000);
+  
+  // Navigate to workflow page after a brief delay
+  setTimeout(() => {
+    router.push('/workflow');
+  }, 1000);
+}
 
 onMounted(() => {
   // support deep link ?trace=
@@ -580,6 +595,15 @@ onBeforeUnmount(() => {
     <!-- Header -->
     <AppHeader>
       <template #status>
+        <!-- OpenAPI Generator Button -->
+        <div class="px-2 pt-3 pb-2">
+          <button
+            @click="showOpenAPIGenerator = true"
+            class="w-full px-3 py-1.5 bg-blue-300 hover:bg-blue-400 text-black rounded-md font-medium transition-all flex items-center justify-center gap-2 text-xs"
+          >
+            Generate from OpenAPI
+          </button>
+        </div>
         <Tooltip :text="connectionMeta.description" position="bottom">
           <span 
             class="hidden lg:inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-full border transition-colors cursor-help"
@@ -1295,6 +1319,14 @@ npm install <span class="text-amber-300">@echoshq/runtime</span>
       :is-open="isTimeTravelModalOpen"
       @close="isTimeTravelModalOpen = false"
       @deploy="deployWorkflowFix"
+    />
+
+    <!-- OpenAPI Generator Modal -->
+    <OpenAPIGeneratorModal
+      :is-open="showOpenAPIGenerator"
+      :org-id="auth.currentOrg.value?.id || auth.user.value?.orgId || ''"
+      @close="showOpenAPIGenerator = false"
+      @saved="handleWorkflowSaved"
     />
   </div>
 </template>

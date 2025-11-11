@@ -13,19 +13,34 @@ export class WorkflowController {
     @Body() body: { orgId: string; name: string; yamlConfig: string; description?: string },
     @Req() req: Request
   ) {
+    console.log('[WorkflowController] Create workflow request received');
+    console.log('[WorkflowController] Body keys:', Object.keys(body));
+    console.log('[WorkflowController] orgId:', body.orgId);
+    console.log('[WorkflowController] name:', body.name);
+    console.log('[WorkflowController] yamlConfig length:', body.yamlConfig?.length);
+    
     if (!body.orgId || !body.name || !body.yamlConfig) {
       throw new HttpException('orgId, name, and yamlConfig are required', HttpStatus.BAD_REQUEST);
     }
 
-    const workflow = await this.workflowService.createWorkflow(
-      req.orgId || body.orgId,
-      req.user.id,
-      body.name,
-      body.yamlConfig,
-      body.description
-    );
+    try {
+      const workflow = await this.workflowService.createWorkflow(
+        req.orgId || body.orgId,
+        req.user.id,
+        body.name,
+        body.yamlConfig,
+        body.description
+      );
 
-    return { workflow };
+      console.log('[WorkflowController] Workflow created successfully:', workflow.id);
+      return { workflow };
+    } catch (error) {
+      console.error('[WorkflowController] Error creating workflow:', error);
+      throw new HttpException(
+        error instanceof Error ? error.message : 'Failed to create workflow',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
   }
 
   @Get()

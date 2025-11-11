@@ -123,6 +123,18 @@
                   </svg>
                   <span>Auto-retry enabled</span>
                 </div>
+                <div v-if="agent.endpointCount > 0" class="flex items-center gap-2">
+                  <svg class="w-3.5 h-3.5 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <span class="text-purple-300 font-medium">{{ agent.endpointCount }} API endpoints</span>
+                </div>
+                <div v-if="agent.allowedDomains && agent.allowedDomains.length > 0" class="flex items-start gap-2">
+                  <svg class="w-3.5 h-3.5 mt-0.5 text-amber-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span class="text-amber-300 break-all">{{ agent.allowedDomains.join(', ') }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -141,6 +153,7 @@ const props = defineProps<{
   selectedWorkflow?: string;
 }>();
 
+const api = useApiBase();
 const loading = ref(true);
 const error = ref<string | null>(null);
 const mermaidCode = ref('');
@@ -167,7 +180,13 @@ onMounted(async () => {
     });
     
     await nextTick();
-    await loadWorkflow();
+    
+    // Only load workflow if a valid ID is provided
+    if (props.selectedWorkflow) {
+      await loadWorkflow();
+    } else {
+      loading.value = false;
+    }
   } catch (e) {
     console.error('Initialization error:', e);
     error.value = 'Failed to initialize: ' + (e instanceof Error ? e.message : String(e));
@@ -179,30 +198,97 @@ defineExpose({
   loadWorkflow
 });
 
-async function loadWorkflow(workflowId?: string) {
-  const id = workflowId || props.selectedWorkflow || 'main';
+async function loadWorkflow(workflowId?: string, source: string = 'file') {
+  const id = workflowId || props.selectedWorkflow;
+  
+  if (!id) {
+    console.log('No workflow ID provided, skipping load');
+    loading.value = false;
+    return;
+  }
+  
   try {
     loading.value = true;
     error.value = null;
     
-    // Fetch actual workflow.yaml from API
-    const response = await fetch(`/api/workflows/${id}`);
-    const data = await response.json();
+    console.log('Loading workflow:', id, 'from source:', source);
     
-    if (!data.success || !data.workflow) {
-      throw new Error(data.error || 'Failed to load workflow configuration');
+    let workflow: any;
+    
+    if (source === 'database') {
+      // Fetch workflow from database
+      const response = await fetch(`${api}/workflows/${id}`, {
+        credentials: 'include'
+      });
+      
+      const data = await response.json();
+      console.log('Workflow data from database:', data);
+      
+      if (!data || !data.workflow) {
+        throw new Error('Failed to load workflow configuration');
+      }
+      
+      // Parse the YAML configuration
+      const yamlModule = await import('js-yaml');
+      
+      // The API returns { workflow: {...} }, and the DB field is snake_case (yaml_config)
+      const workflowData = data.workflow || data;
+      const yamlString = workflowData.yaml_config || workflowData.yamlConfig;
+      console.log('Raw YAML string:', yamlString);
+      
+      if (!yamlString) {
+        throw new Error('No YAML configuration found in workflow data');
+      }
+      
+      workflow = yamlModule.load(yamlString) as any;
+    } else {
+      // Load file-based workflow (legacy system)
+      const response = await fetch(`/api/workflows/${id}`);
+      const data = await response.json();
+      console.log('Workflow data from file:', data);
+      
+      if (!data.success || !data.workflow) {
+        throw new Error(data.error || 'Failed to load workflow configuration');
+      }
+      
+      workflow = data.workflow;
     }
     
-    const workflow = data.workflow;
+    console.log('Parsed workflow:', workflow);
+    console.log('Workflow agents:', workflow?.agents);
+    
+    if (!workflow) {
+      throw new Error('Failed to parse workflow YAML - workflow is null or undefined');
+    }
+    
+    if (!workflow.agents) {
+      throw new Error(`Invalid workflow configuration: missing agents array. Workflow keys: ${Object.keys(workflow).join(', ')}`);
+    }
+    
+    if (!Array.isArray(workflow.agents)) {
+      throw new Error(`Invalid workflow configuration: agents is not an array, it's a ${typeof workflow.agents}`);
+    }
+    
+    if (workflow.agents.length === 0) {
+      throw new Error('Invalid workflow configuration: agents array is empty');
+    }
     
     // Parse agents from workflow
-    agents.value = workflow.agents.map((agent: any) => ({
-      name: agent.name,
-      type: agent.type,
-      maxLoops: agent.maxLoops,
-      hasGuardrails: !!agent.policy?.guardrails,
-      hasRetries: !!agent.policy?.retries,
-    }));
+    agents.value = workflow.agents.map((agent: any) => {
+      const guardrails = agent.policy?.guardrails || {};
+      const endpointCount = guardrails.allowedEndpoints?.length || 0;
+      const domains = guardrails.allowedDomains || [];
+      
+      return {
+        name: agent.name,
+        type: agent.type,
+        maxLoops: agent.maxLoops,
+        hasGuardrails: !!agent.policy?.guardrails,
+        hasRetries: !!agent.policy?.retries,
+        endpointCount,
+        allowedDomains: domains,
+      };
+    });
     
     // Generate Mermaid diagram from actual workflow
     const orchestrator = workflow.agents.find((a: any) => a.type === 'orchestrator');

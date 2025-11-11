@@ -94,6 +94,38 @@ When an agent fails in production, you can now:
 
 This is like Chrome DevTools time-travel debugging, but for AI agents.
 
+---
+
+## One-Click Agent from OpenAPI Spec
+
+**NEW:** Paste any OpenAPI spec → instant production-ready agent.
+
+Click **"Generate from OpenAPI"** in the UI, paste a Stripe, GitHub, or any API spec, and get:
+
+- ✅ **Auto-configured guardrails** - Domain allowlisting, SSRF protection
+- ✅ **All endpoints mapped** - Complete API documentation in agent memory
+- ✅ **Auth detection** - Bearer, API Key, OAuth2 automatically configured
+- ✅ **Instant deployment** - Preview, customize, and save in seconds
+
+**Example:**
+```bash
+# Paste this URL:
+https://raw.githubusercontent.com/stripe/openapi/master/openapi/spec3.json
+
+# Get a Stripe agent that can:
+✓ Create customers
+✓ Process payments
+✓ Manage subscriptions
+✓ Handle refunds
+# All with natural language!
+```
+
+Turn **any API into a natural language interface** in under 30 seconds.
+
+[Read full documentation →](docs/OPENAPI_GENERATOR.md)
+
+---
+
 ## Community & Support
 
 Join our Discord community for discussions, support, and updates:
