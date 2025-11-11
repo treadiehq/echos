@@ -163,6 +163,7 @@ Join our Discord community for discussions, support, and updates:
 ## Features
 
 - **Time-Travel Debugging** - Click any failed trace → Edit config → Test the fix → Deploy. Fix production issues in 60 seconds.
+- **Cost Estimation & Warnings** - See estimated costs before running workflows. Get warned about high-cost operations (>$0.10)
 - **Loop Limiting** - Set `maxLoops` per agent to prevent infinite loops
 - **Retry Logic** - Automatic retries with exponential backoff
 - **Cost Ceilings** - Per-agent and per-workflow cost limits
@@ -170,6 +171,7 @@ Join our Discord community for discussions, support, and updates:
 - **Multi-LLM** - OpenAI (GPT-3.5, GPT-4, GPT-4o) or Anthropic (Claude)
 - **Visual Traces** - See what happened, where it failed, and costs
 - **Guardrails** - SQL injection protection, SSRF blocking, table/domain whitelisting
+- **Environment Validation** - Automatic checks for Docker, Node.js, and dependencies on startup
 
 ---
 
@@ -178,10 +180,11 @@ Join our Discord community for discussions, support, and updates:
 Everything runs on your machine—no external services required.
 
 ```bash
-# 1. Start Echos locally (starts PostgreSQL + server + web UI)
+# 1. Start Echos locally (validates environment, starts PostgreSQL + server + web UI)
 git clone https://github.com/treadiehq/echos.git
 cd echos
 ./start.sh  # Or: npm install && npm run start
+# start.sh automatically checks for Docker, Node.js, and installs dependencies
 
 # 2. Create account at http://localhost:3000/signup
 # Get your API key (authenticates to YOUR local server at localhost:4000)
