@@ -24,6 +24,10 @@ CREATE TABLE IF NOT EXISTS organizations (
 
 CREATE INDEX IF NOT EXISTS idx_organizations_slug ON organizations(slug);
 
+-- Ensure unique organization names (case-insensitive)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_organizations_unique_name 
+  ON organizations(LOWER(name));
+
 -- Organization members (user-to-org relationships)
 CREATE TABLE IF NOT EXISTS org_members (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

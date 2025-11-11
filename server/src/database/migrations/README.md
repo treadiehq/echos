@@ -22,8 +22,3 @@ psql -h localhost -U your_user -d your_database
 # If running in Docker
 docker exec -i your_postgres_container psql -U your_user -d your_database < server/src/database/migrations/add-unique-api-key-names.sql
 ```
-
-## Migrations
-
-- `add-unique-api-key-names.sql` - Adds a unique constraint to ensure API key names are unique per organization (only for active/non-revoked keys)
-

@@ -1,6 +1,7 @@
 import { Injectable, HttpException, HttpStatus, Inject } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { randomBytes } from 'crypto';
+import { isReservedName, isSimilarToReservedName } from './reserved-names';
 
 // Generate random ID compatible with CommonJS
 function nanoid(length = 32): string {
@@ -32,8 +33,26 @@ export class OrganizationsService {
   constructor(@Inject(DatabaseService) private db: DatabaseService) {}
 
   async createOrganization(name: string, userId: string): Promise<Organization> {
+    const trimmedName = name.trim();
+
+    // Check if name is reserved
+    if (isReservedName(trimmedName)) {
+      throw new HttpException('This organization name is reserved and cannot be used', HttpStatus.BAD_REQUEST);
+    }
+
+    // Check if name is too similar to reserved names (optional strict check)
+    if (isSimilarToReservedName(trimmedName)) {
+      throw new HttpException('This organization name is too similar to a reserved name', HttpStatus.BAD_REQUEST);
+    }
+
+    // Check if organization name already exists (case-insensitive)
+    const existingOrg = await this.getOrganizationByName(trimmedName);
+    if (existingOrg) {
+      throw new HttpException('An organization with this name already exists', HttpStatus.CONFLICT);
+    }
+
     // Generate slug from name
-    let slug = name.toLowerCase()
+    let slug = trimmedName.toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '');
     
@@ -50,7 +69,7 @@ export class OrganizationsService {
       `INSERT INTO organizations (name, slug, created_by)
        VALUES ($1, $2, $3)
        RETURNING *`,
-      [name, uniqueSlug, userId]
+      [trimmedName, uniqueSlug, userId]
     );
 
     const org = result.rows[0];
@@ -74,6 +93,15 @@ export class OrganizationsService {
     const result = await this.db.query(
       `SELECT * FROM organizations WHERE slug = $1`,
       [slug]
+    );
+
+    return result.rows[0] || null;
+  }
+
+  async getOrganizationByName(name: string): Promise<Organization | null> {
+    const result = await this.db.query(
+      `SELECT * FROM organizations WHERE LOWER(name) = LOWER($1)`,
+      [name]
     );
 
     return result.rows[0] || null;
@@ -217,6 +245,29 @@ export class OrganizationsService {
     const canUpdate = await this.canUserAccess(orgId, userId, 'admin');
     if (!canUpdate) {
       throw new HttpException('Not authorized to update organization', HttpStatus.FORBIDDEN);
+    }
+
+    // If updating name, validate it
+    if (updates.name) {
+      const trimmedName = updates.name.trim();
+
+      // Check if name is reserved
+      if (isReservedName(trimmedName)) {
+        throw new HttpException('This organization name is reserved and cannot be used', HttpStatus.BAD_REQUEST);
+      }
+
+      // Check if name is too similar to reserved names
+      if (isSimilarToReservedName(trimmedName)) {
+        throw new HttpException('This organization name is too similar to a reserved name', HttpStatus.BAD_REQUEST);
+      }
+
+      // Check if another organization has this name (case-insensitive)
+      const existingOrg = await this.getOrganizationByName(trimmedName);
+      if (existingOrg && existingOrg.id !== orgId) {
+        throw new HttpException('An organization with this name already exists', HttpStatus.CONFLICT);
+      }
+
+      updates.name = trimmedName;
     }
 
     const result = await this.db.query(

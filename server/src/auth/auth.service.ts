@@ -1,5 +1,6 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
+import { OrganizationsService } from '../organizations/organizations.service';
 import { Resend } from 'resend';
 import { randomBytes } from 'crypto';
 import jwt from 'jsonwebtoken';
@@ -29,7 +30,10 @@ export class AuthService {
   private resend: Resend | null = null;
   private jwtSecret: string;
 
-  constructor(@Inject(DatabaseService) private db: DatabaseService) {
+  constructor(
+    @Inject(DatabaseService) private db: DatabaseService,
+    @Inject(forwardRef(() => OrganizationsService)) private organizationsService: OrganizationsService
+  ) {
     // Initialize Resend only in production
     if (process.env.RESEND_API_KEY) {
       this.resend = new Resend(process.env.RESEND_API_KEY);
@@ -154,25 +158,9 @@ export class AuthService {
   }
   
   private async createOrganizationForUser(userId: string, orgName: string): Promise<void> {
-    // Generate a slug from the org name
-    const slug = orgName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-    const uniqueSlug = `${slug}-${nanoid(8)}`;
-    
-    // Create the organization
-    const orgResult = await this.db.query(
-      `INSERT INTO organizations (name, slug, created_by)
-       VALUES ($1, $2, $3) RETURNING *`,
-      [orgName, uniqueSlug, userId]
-    );
-    
-    const org = orgResult.rows[0];
-    
-    // Add the user as an owner
-    await this.db.query(
-      `INSERT INTO org_members (org_id, user_id, role)
-       VALUES ($1, $2, $3)`,
-      [org.id, userId, 'owner']
-    );
+    // Use the organizations service which has all validation logic
+    // (reserved names, duplicate names, etc.)
+    await this.organizationsService.createOrganization(orgName, userId);
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
