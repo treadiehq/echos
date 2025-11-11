@@ -964,10 +964,6 @@ npm install <span class="text-amber-300">@echoshq/runtime</span>
   workflow: <span class="text-amber-300">'./workflow.yaml'</span> <span class="text-gray-500">// optional</span>
 })
 
-<span class="text-gray-500">// Simple string input</span>
-<span class="text-purple-400">const</span> <span class="text-sky-300">result</span> = <span class="text-purple-400">await</span> runtime.<span class="text-sky-300">run</span>(<span class="text-amber-300">'Analyze sales data for Q4'</span>)
-
-<span class="text-gray-500">// Or with memory context</span>
 <span class="text-purple-400">const</span> <span class="text-sky-300">result</span> = <span class="text-purple-400">await</span> runtime.<span class="text-sky-300">run</span>({
   task: <span class="text-amber-300">'Analyze sales data for Q4'</span>,
   memory: { year: <span class="text-emerald-300">2024</span> }
