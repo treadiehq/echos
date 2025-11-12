@@ -41,7 +41,7 @@ export class AuthController {
     try {
       const { user, sessionToken, isSignup } = await this.authService.verifyMagicLink(token);
 
-      console.log('🔍 Verify debug:', { userId: user.id, email: user.email, isSignup });
+      // console.log('🔍 Verify debug:', { userId: user.id, email: user.email, isSignup });
 
       // Set cookie
       res.cookie('session_token', sessionToken, {
@@ -54,10 +54,10 @@ export class AuthController {
       // Redirect to app - onboarding for sign-ups, home for logins
       const redirectUrl = process.env.APP_URL || 'http://localhost:3000';
       if (isSignup) {
-        console.log('✅ Redirecting to onboarding (sign-up)');
+        // console.log('✅ Redirecting to onboarding (sign-up)');
         res.redirect(`${redirectUrl}/onboarding`);
       } else {
-        console.log('✅ Redirecting to home (login)');
+        // console.log('✅ Redirecting to home (login)');
         res.redirect(`${redirectUrl}?login=success`);
       }
     } catch (error) {

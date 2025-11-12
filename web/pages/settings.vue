@@ -275,7 +275,7 @@ const dismissCreatedKey = () => {
               </div>
               <button
                 @click="openDeleteModal(key)"
-                class="px-3 py-1.5 bg-red-400/10 border border-red-400/10 hover:bg-red-400/15 text-red-400 rounded-lg text-sm transition"
+                class="px-3 py-1.5 bg-gray-500/5 border border-gray-500/10 hover:bg-gray-500/10 hover:text-white text-gray-500 rounded-lg text-sm transition"
               >
                 Delete
               </button>
