@@ -21,9 +21,6 @@ function main() {
   const outputIndex = args.indexOf("--output");
   const outputFile = outputIndex >= 0 ? args[outputIndex + 1] : null;
   
-  console.log(`📊 Visualizing workflow: ${workflowFile}`);
-  console.log("");
-  
   try {
     const workflow = loadWorkflow(workflowFile);
     
@@ -35,18 +32,18 @@ function main() {
     
     if (outputFile) {
       fs.writeFileSync(outputFile, output, "utf8");
-      console.log(`✅ Saved to: ${outputFile}`);
-      console.log("");
-      console.log("View the Mermaid diagram at:");
-      console.log(`   https://mermaid.live/edit#${Buffer.from(output).toString('base64')}`);
+      // console.log(`✅ Saved to: ${outputFile}`);
+      // console.log("");
+      // console.log("View the Mermaid diagram at:");
+      // console.log(`   https://mermaid.live/edit#${Buffer.from(output).toString('base64')}`);
     } else {
       console.log(output);
-      console.log("");
-      console.log("💡 Tip: Save to file with --output workflow.md");
-      console.log("💡 Tip: View diagram only with --diagram");
+      // console.log("");
+      // console.log("💡 Tip: Save to file with --output workflow.md");
+      // console.log("💡 Tip: View diagram only with --diagram");
     }
   } catch (error) {
-    console.error("❌ Error:", error instanceof Error ? error.message : String(error));
+    // console.error("❌ Error:", error instanceof Error ? error.message : String(error));
     process.exit(1);
   }
 }

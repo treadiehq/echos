@@ -49,7 +49,6 @@ onMounted(async () => {
     });
     
     const data = await response.json();
-    console.log('Loaded database workflows:', data);
     
     const dbWorkflows = (data.workflows || []).map((w: any) => ({
       ...w,
@@ -61,8 +60,6 @@ onMounted(async () => {
       ...fileWorkflows,
       ...dbWorkflows
     ];
-
-    console.log('All workflows:', availableWorkflows.value);
     
     // Auto-select first workflow if available
     if (availableWorkflows.value.length > 0) {

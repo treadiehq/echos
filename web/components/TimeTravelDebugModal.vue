@@ -73,12 +73,6 @@ async function testFix() {
     // Get trace ID - use database ID (props.trace.id), not taskId from data
     const traceId = props.trace?.id;
     
-    console.log('Replaying trace:', {
-      traceId,
-      hasTrace: !!props.trace,
-      traceKeys: props.trace ? Object.keys(props.trace) : []
-    });
-    
     if (!traceId) {
       console.error('Trace object:', props.trace);
       console.error('Trace data:', traceData.value);
@@ -86,7 +80,6 @@ async function testFix() {
     }
     
     const url = `${api}/traces/${traceId}/replay`;
-    console.log('Replay URL:', url);
     
     const response = await $fetch(url, {
       method: 'POST',

@@ -202,7 +202,6 @@ async function loadWorkflow(workflowId?: string, source: string = 'file') {
   const id = workflowId || props.selectedWorkflow;
   
   if (!id) {
-    console.log('No workflow ID provided, skipping load');
     loading.value = false;
     return;
   }
@@ -210,8 +209,6 @@ async function loadWorkflow(workflowId?: string, source: string = 'file') {
   try {
     loading.value = true;
     error.value = null;
-    
-    console.log('Loading workflow:', id, 'from source:', source);
     
     let workflow: any;
     
@@ -222,7 +219,6 @@ async function loadWorkflow(workflowId?: string, source: string = 'file') {
       });
       
       const data = await response.json();
-      console.log('Workflow data from database:', data);
       
       if (!data || !data.workflow) {
         throw new Error('Failed to load workflow configuration');
@@ -234,7 +230,6 @@ async function loadWorkflow(workflowId?: string, source: string = 'file') {
       // The API returns { workflow: {...} }, and the DB field is snake_case (yaml_config)
       const workflowData = data.workflow || data;
       const yamlString = workflowData.yaml_config || workflowData.yamlConfig;
-      console.log('Raw YAML string:', yamlString);
       
       if (!yamlString) {
         throw new Error('No YAML configuration found in workflow data');
@@ -245,7 +240,6 @@ async function loadWorkflow(workflowId?: string, source: string = 'file') {
       // Load file-based workflow (legacy system)
       const response = await fetch(`/api/workflows/${id}`);
       const data = await response.json();
-      console.log('Workflow data from file:', data);
       
       if (!data.success || !data.workflow) {
         throw new Error(data.error || 'Failed to load workflow configuration');
@@ -253,9 +247,6 @@ async function loadWorkflow(workflowId?: string, source: string = 'file') {
       
       workflow = data.workflow;
     }
-    
-    console.log('Parsed workflow:', workflow);
-    console.log('Workflow agents:', workflow?.agents);
     
     if (!workflow) {
       throw new Error('Failed to parse workflow YAML - workflow is null or undefined');
@@ -348,25 +339,20 @@ async function renderDiagram() {
   await nextTick();
   
   const container = mermaidContainer.value;
-  console.log('Container check:', container);
   
   if (!container) {
     console.error('Mermaid container not found after nextTick');
     error.value = 'Mermaid container element not found';
     return;
   }
-  
+
   if (!mermaidCode.value) {
     console.error('Mermaid code is empty');
     return;
   }
-  
-  console.log('Rendering mermaid diagram...');
-  console.log('Mermaid code:', mermaidCode.value);
-  
+
   try {
     const { svg } = await mermaid.render('mermaid-diagram-' + Date.now(), mermaidCode.value);
-    console.log('Mermaid rendered successfully, SVG length:', svg.length);
     container.innerHTML = svg;
   } catch (e) {
     console.error('Mermaid render error:', e);

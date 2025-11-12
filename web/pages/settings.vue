@@ -47,7 +47,6 @@ const fetchApiKeys = async () => {
       credentials: 'include'
     });
     apiKeys.value = response.apiKeys || [];
-    console.log('Fetched API keys:', apiKeys.value);
   } catch (err: any) {
     console.error('Failed to fetch API keys:', err);
   }

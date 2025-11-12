@@ -515,8 +515,6 @@ async function deployWorkflowFix(modifiedConfig: any) {
     
     // Show success message
     alert('Workflow configuration updated successfully! All future runs will use the new configuration.');
-    
-    console.log('Workflow updated:', response);
   } catch (err: any) {
     console.error('Failed to deploy workflow fix:', err);
     alert(`Failed to deploy workflow: ${err.message || 'Unknown error'}`);
@@ -557,8 +555,6 @@ const isInitialLoad = ref(true);
 const showOpenAPIGenerator = ref(false);
 
 function handleWorkflowSaved(workflowId: string) {
-  console.log('Workflow saved:', workflowId);
-  
   // Show success toast notification
   toast.success('Workflow saved successfully! Redirecting to Workflow page...', 3000);
   
@@ -596,7 +592,7 @@ onBeforeUnmount(() => {
     <AppHeader>
       <template #status>
         <!-- OpenAPI Generator Button -->
-        <div class="px-2 pt-3 pb-2">
+        <div class="">
           <button
             @click="showOpenAPIGenerator = true"
             class="w-full px-3 py-1.5 bg-blue-300 hover:bg-blue-400 text-black rounded-md font-medium transition-all flex items-center justify-center gap-2 text-xs"
@@ -691,44 +687,6 @@ onBeforeUnmount(() => {
                 {{ listError }}
               </div>
             </div>
-            <!-- <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-red-200/80">
-              <div class="flex items-center gap-2">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12M8 11h12M8 15h12M4 7h.01M4 11h.01M4 15h.01" />
-                </svg>
-                <span>Start the server:</span>
-                <code class="bg-red-400/20 border border-red-400/30 px-1.5 py-0.5 rounded text-[11px]">npm run start:ui</code>
-              </div>
-              <button 
-                type="button"
-                class="inline-flex items-center gap-1 px-2 py-1 rounded border border-red-400/30 text-[11px] text-red-200/90 hover:border-red-300/60 transition"
-                @click="copyCommand('npm run start:ui')"
-              >
-                <svg 
-                  class="w-3.5 h-3.5"
-                  :class="isCopied('npm run start:ui') ? 'text-emerald-300' : ''"
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path 
-                    v-if="isCopied('npm run start:ui')" 
-                    stroke-linecap="round" 
-                    stroke-linejoin="round" 
-                    stroke-width="2" 
-                    d="M5 13l4 4L19 7" 
-                  />
-                  <path 
-                    v-else 
-                    stroke-linecap="round" 
-                    stroke-linejoin="round" 
-                    stroke-width="2" 
-                    d="M8 16h8m2 4H6a2 2 0 01-2-2V6a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V18a2 2 0 01-2 2z" 
-                  />
-                </svg>
-                <span>{{ isCopied('npm run start:ui') ? 'Copied' : 'Copy' }}</span>
-              </button>
-            </div> -->
           </div>
 
           <!-- Loading Skeleton (Initial Load Only) -->
@@ -890,13 +848,6 @@ const result = await echos.run({
               </div>
             </div>
             <div class="flex items-center justify-end gap-3 text-sm">
-              <!-- <button 
-                type="button"
-                class="px-3 py-2 rounded-lg bg-gray-500/10 hover:bg-gray-500/15 border border-gray-500/10 text-gray-400 hover:text-white transition"
-                @click="resetDetail"
-              >
-                Close
-              </button> -->
               <button 
                 type="button"
                 class="px-3 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 text-red-300 transition flex items-center gap-2"
@@ -907,13 +858,6 @@ const result = await echos.run({
                 </svg>
                 Retry
               </button>
-              <!-- <button 
-                type="button"
-                class="px-3 py-1.5 rounded-md border border-red-400/10 text-red-400/60 hover:text-red-400/80 hover:border-red-400/20 transition"
-                @click="resetDetail"
-              >
-                Close
-              </button> -->
             </div>
           </div>
         </div>

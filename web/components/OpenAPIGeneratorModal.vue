@@ -258,12 +258,6 @@ async function parseSpec() {
   error.value = null;
 
   try {
-    console.log('[OpenAPI] Starting generate request...', {
-      api,
-      spec: specInput.value.substring(0, 100),
-      options
-    });
-
     // Use native fetch with proper error handling
     const fetchResponse = await fetch(`${api}/openapi/generate`, {
       method: 'POST',
@@ -278,7 +272,6 @@ async function parseSpec() {
     });
 
     const response = await fetchResponse.json();
-    console.log('[OpenAPI] Response received:', response);
 
     if (!response.success) {
       throw new Error(response.error || 'Failed to parse spec');
@@ -306,12 +299,6 @@ async function saveWorkflow() {
   error.value = null;
 
   try {
-    console.log('[OpenAPI] Saving workflow...', {
-      orgId: props.orgId,
-      name: apiInfo.value?.title,
-      yamlLength: generatedWorkflow.value?.length
-    });
-
     const fetchResponse = await fetch(`${api}/workflows`, {
       method: 'POST',
       headers: {
@@ -326,9 +313,7 @@ async function saveWorkflow() {
       }),
     });
 
-    console.log('[OpenAPI] Save response status:', fetchResponse.status);
     const response = await fetchResponse.json();
-    console.log('[OpenAPI] Save response data:', response);
 
     if (!fetchResponse.ok) {
       throw new Error(response.message || response.error || `Server returned ${fetchResponse.status}`);
