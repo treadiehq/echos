@@ -29,32 +29,32 @@
             <textarea
               v-model="specInput"
               placeholder="Paste OpenAPI spec JSON or enter URL like https://raw.githubusercontent.com/stripe/openapi/master/openapi/spec3.json"
-              class="w-full h-64 bg-gray-500/10 border border-gray-500/20 rounded-lg p-4 text-white font-mono text-sm focus:outline-none focus:border-purple-500 transition-colors resize-none"
+              class="w-full h-64 bg-gray-500/5 border border-gray-500/20 rounded-lg p-4 text-white font-mono text-sm focus:outline-none focus:border-purple-500 transition-colors resize-none"
               :disabled="isLoading"
             />
           </div>
 
           <!-- Quick examples -->
-          <div class="bg-gray-500/10 border border-gray-500/20 rounded-lg p-4">
+          <div class="bg-gray-500/5 border border-gray-500/20 rounded-lg p-4">
             <p class="text-sm text-gray-300 mb-3 font-medium">Quick examples</p>
             <div class="flex flex-wrap gap-2">
               <button
                 @click="loadExample('stripe')"
-                class="px-3 py-1.5 bg-gray-500/5 border border-gray-500/10 text-gray-300 rounded-md hover:bg-gray-500/15 text-sm font-medium transition-colors"
+                class="px-3 py-1.5 bg-gray-500/5 border border-gray-500/10 text-white rounded-lg hover:bg-gray-500/15 text-sm font-medium transition-colors"
                 :disabled="isLoading"
               >
                 Stripe API
               </button>
               <button
                 @click="loadExample('github')"
-                class="px-3 py-1.5 bg-gray-500/5 border border-gray-500/10 text-gray-300 rounded-md hover:bg-gray-500/15 text-sm font-medium transition-colors"
+                class="px-3 py-1.5 bg-gray-500/5 border border-gray-500/10 text-white rounded-lg hover:bg-gray-500/15 text-sm font-medium transition-colors"
                 :disabled="isLoading"
               >
                 GitHub API
               </button>
               <button
                 @click="loadExample('petstore')"
-                class="px-3 py-1.5 bg-gray-500/5 border border-gray-500/10 text-gray-300 rounded-md hover:bg-gray-500/15 text-sm font-medium transition-colors"
+                class="px-3 py-1.5 bg-gray-500/5 border border-gray-500/10 text-white rounded-lg hover:bg-gray-500/15 text-sm font-medium transition-colors"
                 :disabled="isLoading"
               >
                 Petstore (Demo)
@@ -63,11 +63,8 @@
           </div>
 
           <!-- Options -->
-          <div class="bg-gradient-to-br from-gray-500/5 to-gray-500/10 border border-gray-500/20 rounded-xl p-6">
+          <div class="bg-gray-500/5 border border-gray-500/20 rounded-xl p-6">
             <div class="flex items-center gap-2 mb-4">
-              <!-- <svg class="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-              </svg> -->
               <h3 class="text-base font-semibold text-white">Configuration Options</h3>
             </div>
             
@@ -97,18 +94,18 @@
                 <label class="block text-sm font-medium text-gray-200 mb-2">
                   Maximum Cost Limit
                 </label>
-                <div class="relative">
+                <div class="relative flex items-center gap-2">
                   <input
                     type="number"
                     v-model.number="options.maxCost"
-                    class="w-full sm:w-48 bg-black/20 border border-gray-500/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-300/20 focus:border-blue-300/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="w-full sm:w-40 bg-black/20 border border-gray-500/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-300/20 focus:border-blue-300/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     placeholder="5.0"
                     step="0.5"
                     min="1"
                     max="100"
                     :disabled="isLoading"
                   />
-                  <div class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 pointer-events-none">
+                  <div class="text-xs text-gray-500 pointer-events-none">
                     units
                   </div>
                 </div>
@@ -123,7 +120,7 @@
             <button
               @click="parseSpec"
               :disabled="!specInput || isLoading"
-              class="px-6 py-2.5 bg-blue-300 hover:bg-blue-400 disabled:opacity-50 disabled:cursor-not-allowed text-black rounded-lg font-medium transition-all"
+              class="px-4 py-2 bg-blue-300 text-sm hover:bg-blue-400 disabled:opacity-50 disabled:cursor-not-allowed text-black rounded-lg font-medium transition-all"
             >
               <span v-if="isLoading" class="flex items-center gap-2">
                 <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -189,15 +186,15 @@
           <div class="flex gap-3">
             <button
               @click="step = 'input'"
-              class="px-6 py-2.5 bg-gray-500/10 border border-gray-500/10 text-gray-300 rounded-lg font-medium transition-colors hover:bg-gray-500/15"
+              class="px-4 py-2 text-sm bg-gray-500/10 border border-gray-500/10 text-gray-300 rounded-lg font-medium transition-colors hover:bg-gray-500/15"
               :disabled="isLoading"
             >
-              ← Back
+              Back
             </button>
             <button
               @click="saveWorkflow"
               :disabled="isLoading"
-              class="px-6 py-2.5 bg-blue-300 hover:bg-blue-400 disabled:bg-gray-500 disabled:cursor-not-allowed text-black rounded-lg font-medium transition-all"
+              class="px-4 py-2 bg-blue-300 text-sm hover:bg-blue-400 disabled:bg-gray-500 disabled:cursor-not-allowed text-black rounded-lg font-medium transition-all"
             >
               <span v-if="isLoading" class="flex items-center gap-2">
                 <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
@@ -206,7 +203,7 @@
                 </svg>
                 Saving...
               </span>
-              <span v-else>✓ Save Workflow</span>
+              <span v-else>Save Workflow</span>
             </button>
           </div>
         </div>
