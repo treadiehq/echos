@@ -72,10 +72,8 @@ Echos is **local-first** and designed for sensitive data:
 
 **For Production:**
 
-- Self-host in your VPC using Docker/Docker Compose
-- Perfect for HIPAA, SOC2, and compliance requirements
-- Deploy to any infrastructure (AWS, GCP, Azure, Railway)
-- Your data never touches our servers
+- Self-host in your VPC or deploy to any infrastructure.
+- Use it at [Echos](https://echoshq.com)
 
 ---
 Use anywhere:
