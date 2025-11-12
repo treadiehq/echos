@@ -40,7 +40,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       // Run migrations
       await this.runMigrations();
     } catch (error) {
-      console.error('❌ Database connection failed:', error);
+      // console.error('❌ Database connection failed:', error);
       throw error;
     }
   }
@@ -61,7 +61,7 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       
       return result;
     } catch (error) {
-      console.error('Database query error:', { text, error });
+      // console.error('Database query error:', { text, error });
       throw error;
     }
   }
