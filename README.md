@@ -22,9 +22,9 @@ Building multi-agent AI systems means rebuilding the same things over and over:
 
 Echos lets you:
 
-Coordinate multiple AI agents - Let different agents handle different tasks
-See what's happening - Watch your agents work in real-time
-Debug easily - Visual traces show you exactly what went wrong
+- Coordinate multiple AI agents - Let different agents handle different tasks
+- See what's happening - Watch your agents work in real-time
+- Debug easily - Visual traces show you exactly what went wrong
 
 Echos gives you **pre-built agent "services"** you compose like AWS:
 
