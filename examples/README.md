@@ -111,6 +111,46 @@ npm run echos -- "Generate a TypeScript function to validate email addresses"
 
 ---
 
+### 5. ☁️ AWS Bedrock Integration
+**File:** `aws-bedrock.yaml`  
+**Use Case:** Multi-agent system using AWS Bedrock for all LLM calls  
+**Perfect For:** AWS-only infrastructure, compliance requirements, VPC isolation
+
+**What it includes:**
+- ✅ Configured to use AWS Bedrock as LLM provider
+- ✅ Support for Claude, Titan, Llama models on Bedrock
+- ✅ IAM role authentication (no credentials needed)
+- ✅ All standard agents (db, api, data)
+- ✅ Complete SQL and API guardrails
+
+**Try it:**
+```bash
+# Set up Bedrock configuration
+export LLM_PROVIDER=bedrock
+export BEDROCK_REGION=us-east-1
+export BEDROCK_MODEL=anthropic.claude-3-sonnet-20240229-v1:0
+
+# Copy template
+cp examples/aws-bedrock.yaml workflow.yaml
+
+# Run with Bedrock
+npm run echos -- "Query the database for top customers and analyze trends"
+```
+
+**Benefits:**
+- 🔐 All LLM calls stay within your AWS account
+- 🏢 VPC isolation support
+- 📊 AWS billing integration
+- ✅ Meets AWS-only compliance requirements
+- 🎯 Works with ECS task roles or EC2 instance roles
+
+**Requirements:**
+- AWS account with Bedrock access
+- IAM permissions for `bedrock:InvokeModel`
+- Environment variables (see template for details)
+
+---
+
 ## 🎨 Customization Guide
 
 ### Step 1: Choose Your Agents

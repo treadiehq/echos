@@ -80,3 +80,4 @@ secrets/
 *.pem
 *.key
 !*.pub.key
+BEDROCK-SETUP.md

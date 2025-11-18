@@ -6,11 +6,17 @@ loadDotenv();
 
 const ConfigSchema = z.object({
   // LLM
-  llmProvider: z.enum(["openai", "anthropic"]).default("openai"),
+  llmProvider: z.enum(["openai", "anthropic", "bedrock"]).default("openai"),
   openaiApiKey: z.string().optional(),
   openaiModel: z.string().default("gpt-4"),
   anthropicApiKey: z.string().optional(),
   anthropicModel: z.string().default("claude-3-5-sonnet-20241022"),
+  
+  // AWS Bedrock
+  bedrockRegion: z.string().default("us-east-1"),
+  bedrockModel: z.string().default("anthropic.claude-3-sonnet-20240229-v1:0"),
+  awsAccessKeyId: z.string().optional(),
+  awsSecretAccessKey: z.string().optional(),
 
   // Database
   databaseUrl: z.string().optional(),
@@ -36,6 +42,10 @@ export function loadConfig(): Config {
     openaiModel: process.env.OPENAI_MODEL,
     anthropicApiKey: process.env.ANTHROPIC_API_KEY,
     anthropicModel: process.env.ANTHROPIC_MODEL,
+    bedrockRegion: process.env.BEDROCK_REGION,
+    bedrockModel: process.env.BEDROCK_MODEL,
+    awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
     databaseUrl: process.env.DATABASE_URL,
     serperApiKey: process.env.SERPER_API_KEY,
     braveApiKey: process.env.BRAVE_API_KEY,

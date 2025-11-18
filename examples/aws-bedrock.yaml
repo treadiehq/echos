@@ -1,0 +1,154 @@
+# Example: AWS Bedrock Configuration
+# Use case: Multi-agent system using AWS Bedrock for all LLM calls
+# Perfect for: AWS-only infrastructure, compliance requirements, VPC isolation
+
+name: "AWS Bedrock Multi-Agent System"
+
+# Configure Bedrock as the LLM provider
+# Set these environment variables:
+# LLM_PROVIDER=bedrock
+# BEDROCK_REGION=us-east-1
+# BEDROCK_MODEL=anthropic.claude-3-sonnet-20240229-v1:0
+# 
+# For IAM role (recommended):
+# No additional credentials needed - uses ECS task role or EC2 instance role
+#
+# For explicit credentials:
+# AWS_ACCESS_KEY_ID=your_access_key
+# AWS_SECRET_ACCESS_KEY=your_secret_key
+
+agents:
+  - name: orchestrator
+    type: orchestrator
+    maxLoops: 3
+    policy:
+      retries:
+        count: 1
+        backoffMs: 250
+      memoryPolicy:
+        readFrom: ["global"]
+        writeTo: "orchestrator"
+      guardrails:
+        maxCostPerInvocation: 0.50
+
+  - name: db_agent
+    type: worker
+    maxLoops: 1
+    policy:
+      retries:
+        count: 2
+        backoffMs: 300
+      memoryPolicy:
+        readFrom: ["global", "orchestrator"]
+        writeTo: "database"
+      guardrails:
+        maxCostPerInvocation: 1.0
+        # SQL guardrails
+        allowedTables:
+          - users
+          - orders
+          - products
+        allowedOperations:
+          - SELECT
+        # Prevents: DELETE, DROP, TRUNCATE, ALTER
+
+  - name: data_agent
+    type: worker
+    maxLoops: 2
+    policy:
+      retries:
+        count: 1
+        backoffMs: 200
+      memoryPolicy:
+        readFrom: ["global", "orchestrator", "database"]
+        writeTo: "analysis"
+      guardrails:
+        maxCostPerInvocation: 1.5
+
+  - name: api_agent
+    type: worker
+    maxLoops: 2
+    policy:
+      retries:
+        count: 3
+        backoffMs: 1000
+      memoryPolicy:
+        readFrom: ["global", "orchestrator"]
+        writeTo: "api"
+      guardrails:
+        maxCostPerInvocation: 0.50
+        # API guardrails - customize for your allowed endpoints
+        allowedDomains:
+          - api.stripe.com
+          - api.github.com
+        allowedMethods:
+          - GET
+          - POST
+        blockPrivateIPs: true
+
+routes:
+  orchestrator:
+    canCall: [db_agent, data_agent, api_agent]
+  db_agent:
+    canCall: [data_agent]
+  api_agent:
+    canCall: [data_agent]
+
+limits:
+  defaultMaxLoops: 3
+  maxDurationMs: 60000   # 60 seconds
+  maxCost: 5.0
+
+memory:
+  global:
+    database_url: "${DATABASE_URL}"
+    region: "us-east-1"
+
+# Example Usage:
+#
+# 1. Set environment variables:
+#    export LLM_PROVIDER=bedrock
+#    export BEDROCK_REGION=us-east-1
+#    export BEDROCK_MODEL=anthropic.claude-3-sonnet-20240229-v1:0
+#    export DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+#
+# 2. Run with the runtime:
+#    import { EchosRuntime } from '@echoshq/runtime';
+#    
+#    const runtime = new EchosRuntime({
+#      apiKey: process.env.ECHOS_API_KEY,
+#      apiUrl: process.env.ECHOS_API_URL || 'http://localhost:4000',
+#      workflow: './examples/aws-bedrock.yaml'
+#    });
+#    
+#    await runtime.run('Query the database for top customers and analyze trends');
+#
+# 3. Or use the CLI:
+#    npx echos "Query the database for top customers and analyze trends"
+
+# Supported Bedrock Models:
+# - anthropic.claude-3-sonnet-20240229-v1:0 (Recommended for most tasks)
+# - anthropic.claude-3-haiku-20240307-v1:0 (Fast, cost-effective)
+# - anthropic.claude-v2 (Legacy Claude)
+# - amazon.titan-text-express-v1 (AWS Titan)
+# - meta.llama3-8b-instruct-v1:0 (Meta Llama)
+# - cohere.command-text-v14 (Cohere)
+
+# IAM Policy Required (attach to ECS task role or EC2 instance role):
+# {
+#   "Version": "2012-10-17",
+#   "Statement": [
+#     {
+#       "Effect": "Allow",
+#       "Action": [
+#         "bedrock:InvokeModel",
+#         "bedrock:InvokeModelWithResponseStream"
+#       ],
+#       "Resource": [
+#         "arn:aws:bedrock:*::foundation-model/anthropic.claude-*",
+#         "arn:aws:bedrock:*::foundation-model/amazon.titan-*"
+#       ]
+#     }
+#   ]
+# }
+

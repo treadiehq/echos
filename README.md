@@ -67,7 +67,7 @@ Echos is **local-first** and designed for sensitive data:
 - **Your workflow data never leaves your machine** - All execution happens locally
 - **Runs on localhost** - No external dependencies required
 - **API keys authenticate to YOUR local server** - Not an external service (localhost:4000)
-- **Optional external calls** - Only LLM APIs (OpenAI, Anthropic) go external. Use local models (Ollama) for complete data isolation
+- **Optional external calls** - Only LLM APIs (OpenAI, Anthropic, AWS Bedrock) go external. Use AWS Bedrock in your VPC or local models (Ollama) for complete data isolation
 - **Multi-tenant ready** - Organization isolation built-in
 
 **For Production:**
@@ -166,7 +166,7 @@ Join our Discord community for discussions, support, and updates:
 - **Retry Logic** - Automatic retries with exponential backoff
 - **Cost Ceilings** - Per-agent and per-workflow cost limits
 - **Memory Management** - Agents share context through namespaced memory
-- **Multi-LLM** - OpenAI (GPT-3.5, GPT-4, GPT-4o) or Anthropic (Claude)
+- **Multi-LLM** - OpenAI (GPT-3.5, GPT-4, GPT-4o), Anthropic (Claude), or AWS Bedrock (Claude, Titan, Llama, etc.)
 - **Visual Traces** - See what happened, where it failed, and costs
 - **Guardrails** - SQL injection protection, SSRF blocking, table/domain whitelisting
 - **Environment Validation** - Automatic checks for Docker, Node.js, and dependencies on startup
@@ -238,6 +238,57 @@ docker-compose up -d
 ```
 
 **Need help with production deployment?** Join our [Discord](https://discord.gg/KqdBcqRk5E) for support.
+
+---
+
+## AWS Bedrock Integration
+
+Echos fully supports AWS Bedrock for organizations that require AWS-only infrastructure.
+
+**📖 Quick Start:** See [BEDROCK-SETUP.md](BEDROCK-SETUP.md) for detailed setup guide
+
+**🧪 Test Integration:** Run `./test-bedrock.sh` or `node test-bedrock.mjs`
+
+### Configuration
+
+Add these environment variables to use Bedrock:
+
+```bash
+# Set LLM provider to Bedrock
+LLM_PROVIDER=bedrock
+
+# Bedrock configuration
+BEDROCK_REGION=us-east-1
+BEDROCK_MODEL=anthropic.claude-3-sonnet-20240229-v1:0
+
+AWS_ACCESS_KEY_ID=your_access_key
+AWS_SECRET_ACCESS_KEY=your_secret_key
+```
+
+### Example workflow.yaml
+
+```yaml
+# workflow.yaml - Configure your agents to use Bedrock
+config:
+  llmProvider: bedrock
+  bedrockRegion: us-east-1
+  bedrockModel: anthropic.claude-3-sonnet-20240229-v1:0
+
+agents:
+  - name: orchestrator
+    maxLoops: 3
+    
+  - name: db_agent
+    connection: ${DATABASE_URL}
+    policy:
+      guardrails:
+        allowedTables: [users, orders]
+        allowedOperations: [SELECT]
+
+routes:
+  orchestrator:
+    canCall: [db_agent, data_agent]
+```
 
 ---
 
