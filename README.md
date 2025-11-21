@@ -253,9 +253,9 @@ docker-compose up -d
 
 Echos fully supports AWS Bedrock for organizations that require AWS-only infrastructure.
 
-**📖 Quick Start:** See [BEDROCK-SETUP.md](BEDROCK-SETUP.md) for detailed setup guide
+**Quick Start:** See [BEDROCK-SETUP.md](BEDROCK-SETUP.md) for detailed setup guide
 
-**🧪 Test Integration:** Run `./test-bedrock.sh` or `node test-bedrock.mjs`
+**Test Integration:** Run `./test-bedrock.sh` or `node test-bedrock.mjs`
 
 ### Configuration
 

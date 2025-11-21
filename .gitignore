@@ -25,6 +25,8 @@ test-*.ts
 test-*.sh
 example-usage.mjs
 example-usage.ts
+test-bedrock.sh
+test-bedrock.mjs
 
 # Backup files
 *.backup
