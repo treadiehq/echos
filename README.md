@@ -60,6 +60,12 @@ routes:
 
 ---
 
+## Live
+
+Try the product live at **https://echoshq.com**
+
+---
+
 ## Community & Support
 
 Join our Discord community for discussions, support, and updates:
