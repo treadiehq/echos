@@ -21,6 +21,8 @@ test-*.mjs
 test-*.sh
 example-usage.ts
 example-usage.mjs
+test-bedrock.sh
+test-bedrock.mjs
 
 # Build artifacts
 node_modules/
