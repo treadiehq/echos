@@ -2,6 +2,7 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import AppHeader from '../components/AppHeader.vue';
 import WorkflowDiagram from '../components/WorkflowDiagram.vue';
+import RunTaskPanel from '../components/RunTaskPanel.vue';
 
 definePageMeta({
   middleware: 'auth'
@@ -21,6 +22,7 @@ const diagramRef = ref<InstanceType<typeof WorkflowDiagram> | null>(null);
 const isDropdownOpen = ref(false);
 const isLoading = ref(true);
 const searchQuery = ref('');
+const selectedWorkflowSource = ref<'file' | 'database'>('file');
 
 // Load available workflows from both file-based and database
 onMounted(async () => {
@@ -63,7 +65,9 @@ onMounted(async () => {
     
     // Auto-select first workflow if available
     if (availableWorkflows.value.length > 0) {
-      selectedWorkflow.value = availableWorkflows.value[0].id;
+      const firstWorkflow = availableWorkflows.value[0];
+      selectedWorkflow.value = firstWorkflow.id;
+      selectedWorkflowSource.value = firstWorkflow.source || 'file';
       handleWorkflowChange();
     }
   } catch (e) {
@@ -111,6 +115,11 @@ function selectWorkflow(workflowId: string) {
   selectedWorkflow.value = workflowId;
   isDropdownOpen.value = false;
   searchQuery.value = ''; // Reset search when selecting
+  
+  // Track the source type
+  const workflow = availableWorkflows.value.find(w => w.id === workflowId);
+  selectedWorkflowSource.value = workflow?.source || 'file';
+  
   handleWorkflowChange();
 }
 
@@ -320,8 +329,53 @@ const vClickOutside = {
     </AppHeader>
 
     <!-- Main Content -->
-    <main class="flex-1 overflow-hidden">
-      <WorkflowDiagram ref="diagramRef" :selected-workflow="selectedWorkflow || undefined" />
+    <main class="flex-1 overflow-hidden flex flex-col">
+      <div class="flex-1 min-h-0">
+        <WorkflowDiagram ref="diagramRef" :selected-workflow="selectedWorkflow || undefined" />
+      </div>
+      
+      <!-- Run Task Panel - Only show for database workflows -->
+      <div 
+        v-if="selectedWorkflow && selectedWorkflowSource === 'database'" 
+        class="border-t border-gray-500/15 bg-black/50 p-4"
+      >
+        <div class="max-w-3xl mx-auto">
+          <RunTaskPanel
+            :workflow-id="selectedWorkflow"
+            :workflow-name="selectedWorkflowName"
+          />
+        </div>
+      </div>
+      
+      <!-- Prompt to generate workflow for template workflows -->
+      <div 
+        v-else-if="selectedWorkflow && selectedWorkflowSource === 'file'" 
+        class="border-t border-gray-500/15 bg-black/50 p-4"
+      >
+        <div class="max-w-3xl mx-auto">
+          <div class="bg-gray-500/5 border border-gray-500/10 rounded-lg p-4">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 rounded-lg bg-blue-400/10 border border-blue-400/20 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm text-white font-medium">This is a template workflow</p>
+                <p class="text-xs text-gray-400 mt-0.5">
+                  To run agents, generate a custom workflow from an OpenAPI spec or create your own.
+                </p>
+              </div>
+              <NuxtLink 
+                to="/"
+                class="px-4 py-2 bg-blue-300 hover:bg-blue-400 text-black text-sm font-medium rounded-lg transition-all"
+              >
+                Generate from OpenAPI
+              </NuxtLink>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
 </template>

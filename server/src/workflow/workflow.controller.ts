@@ -161,5 +161,48 @@ export class WorkflowController {
       };
     }
   }
+
+  /**
+   * Run a workflow with a given task
+   * Returns trace info for real-time viewing
+   */
+  @Post(':workflowId/run')
+  async runWorkflow(
+    @Param('workflowId') workflowId: string,
+    @Body() body: { task: string; memory?: Record<string, unknown> },
+    @Req() req: Request
+  ) {
+    const orgId = req.orgId;
+    
+    if (!orgId) {
+      throw new HttpException('orgId is required', HttpStatus.BAD_REQUEST);
+    }
+
+    if (!body.task) {
+      throw new HttpException('task is required', HttpStatus.BAD_REQUEST);
+    }
+
+    try {
+      const result = await this.workflowService.runWorkflow(
+        workflowId,
+        orgId,
+        body.task,
+        body.memory
+      );
+
+      return {
+        success: true,
+        taskId: result.taskId,
+        orgId: result.orgId,
+        traceUrl: `/traces/${result.taskId}`
+      };
+    } catch (error) {
+      console.error('[WorkflowController] Error running workflow:', error);
+      throw new HttpException(
+        error instanceof Error ? error.message : 'Failed to run workflow',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
 }
 

@@ -216,6 +216,77 @@ export class WorkflowService {
     }
   }
 
+  /**
+   * Run a workflow with a given task
+   * Returns the trace data for real-time viewing
+   */
+  async runWorkflow(
+    workflowId: string,
+    orgId: string,
+    task: string,
+    memory?: Record<string, unknown>
+  ): Promise<{ taskId: string; orgId: string }> {
+    // Get the workflow
+    const workflow = await this.getWorkflow(workflowId, orgId);
+    
+    if (!workflow) {
+      throw new HttpException('Workflow not found', HttpStatus.NOT_FOUND);
+    }
+
+    // Parse the YAML config
+    const workflowConfig = yaml.parse(workflow.yaml_config);
+
+    try {
+      // Import EchosRuntime dynamically to avoid circular dependencies
+      const { EchosRuntime } = await import('../../../dist/runtime.js');
+      
+      // Get API key from environment (required for the runtime)
+      const apiKey = process.env.ECHOS_API_KEY;
+      
+      if (!apiKey) {
+        throw new HttpException(
+          'ECHOS_API_KEY environment variable is required to run workflows. Please set it in your server .env file.',
+          HttpStatus.INTERNAL_SERVER_ERROR
+        );
+      }
+      
+      // Use environment variable for API URL
+      const apiUrl = process.env.ECHOS_API_URL || 'http://localhost:4000';
+      
+      // Create runtime with the workflow config directly
+      const runtime = new EchosRuntime({
+        apiKey,
+        apiUrl,
+        workflowConfig
+      });
+      
+      // Skip API validation since we're already authenticated server-side
+      (runtime as any).orgId = orgId;
+      (runtime as any).workflowName = workflow.name;
+      
+      // Run the workflow in the background (don't await full completion)
+      // The runtime will send trace updates to the API which will be streamed via SSE
+      const runPromise = runtime.run({
+        task,
+        memory: memory || {}
+      });
+      
+      // Wait briefly for the task to start and get the taskId
+      const result = await runPromise;
+      
+      return {
+        taskId: result.taskId,
+        orgId
+      };
+    } catch (error: any) {
+      console.error('[WorkflowService] Error running workflow:', error);
+      throw new HttpException(
+        `Failed to run workflow: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
   private generateWorkflowDiagram(config: any): string {
     const lines: string[] = [];
     

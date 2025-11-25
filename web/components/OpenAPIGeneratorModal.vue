@@ -203,7 +203,90 @@
                 </svg>
                 Saving...
               </span>
-              <span v-else>Save Workflow</span>
+              <span v-else>Save & Continue →</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 3: Run -->
+        <div v-if="step === 'run'" class="space-y-6">
+          <!-- Success Message -->
+          <div class="bg-emerald-300/10 border border-emerald-300/10 rounded-xl p-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-emerald-300/10 flex items-center justify-center">
+                <svg class="w-5 h-5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-lg font-bold text-white">Agent Created!</h3>
+                <p class="text-sm text-emerald-300">{{ apiInfo?.title }} is ready to run</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Run Task Input -->
+          <div class="space-y-3">
+            <label class="block text-sm font-medium text-white">
+              Try it now - what would you like the agent to do?
+            </label>
+            <textarea
+              v-model="taskInput"
+              @keydown.enter.exact.prevent="runWorkflow"
+              :disabled="isRunning"
+              placeholder="e.g. Create customer john@example.com"
+              class="w-full h-28 bg-gray-500/5 border border-gray-500/20 rounded-lg p-4 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-emerald-400/30 focus:ring-1 focus:ring-emerald-400/20 transition-all resize-none"
+            />
+            
+            <!-- Quick Examples -->
+            <div class="flex flex-wrap gap-2">
+              <span class="text-xs text-gray-500">Try:</span>
+              <button
+                v-for="example in getExampleTasks()"
+                :key="example"
+                @click="taskInput = example"
+                class="px-2.5 py-1 bg-gray-500/5 border border-gray-500/10 rounded text-xs text-gray-400 hover:text-white hover:border-gray-500/20 transition-all"
+              >
+                {{ example }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Error Display -->
+          <div v-if="error" class="bg-red-400/10 border border-red-400/20 rounded-lg p-4 text-red-400 text-sm">
+            {{ error }}
+          </div>
+
+          <!-- Actions -->
+          <div class="flex items-center justify-between pt-2">
+            <button
+              @click="skipToWorkflows"
+              class="text-sm text-gray-400 hover:text-white transition-colors"
+            >
+              Skip for now →
+            </button>
+            
+            <button
+              @click="runWorkflow"
+              :disabled="!taskInput.trim() || isRunning"
+              class="flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              :class="isRunning 
+                ? 'bg-blue-300/10 border border-blue-300/10 text-blue-300' 
+                : 'bg-blue-300 hover:bg-blue-400 text-black'"
+            >
+              <template v-if="isRunning">
+                <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Starting Agent...
+              </template>
+              <template v-else>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                </svg>
+                Run & View Trace
+              </template>
             </button>
           </div>
         </div>
@@ -227,12 +310,15 @@ const api = useApiBase();
 const auth = useAuth();
 const toast = useToast();
 
-const step = ref<'input' | 'preview'>('input');
+const step = ref<'input' | 'preview' | 'run'>('input');
 const specInput = ref('');
 const generatedWorkflow = ref('');
 const apiInfo = ref<any>(null);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
+const savedWorkflowId = ref<string | null>(null);
+const taskInput = ref('');
+const isRunning = ref(false);
 
 const options = reactive({
   includeDataAgent: true,
@@ -295,6 +381,47 @@ async function saveWorkflow() {
   isLoading.value = true;
   error.value = null;
 
+  const baseName = apiInfo.value?.title || 'Generated API Agent';
+  
+  // First, check if workflow already exists and get its ID
+  try {
+    const listResponse = await fetch(`${api}/workflows?orgId=${props.orgId}`, {
+      credentials: 'include',
+    });
+    const listData = await listResponse.json();
+    const existingWorkflow = (listData.workflows || []).find((w: any) => w.name === baseName);
+    
+    if (existingWorkflow) {
+      // Update existing workflow instead of creating new
+      const updateResponse = await fetch(`${api}/workflows/${existingWorkflow.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          orgId: props.orgId,
+          yamlConfig: generatedWorkflow.value,
+          description: `Auto-generated from OpenAPI spec: ${apiInfo.value?.title} (${apiInfo.value?.version})`,
+        }),
+      });
+      
+      const updateData = await updateResponse.json();
+      
+      if (!updateResponse.ok) {
+        throw new Error(updateData.message || updateData.error || 'Failed to update workflow');
+      }
+      
+      savedWorkflowId.value = existingWorkflow.id;
+      toast.success('✅ Workflow updated! Now let\'s run it.', 2000);
+      proceedToRunStep();
+      return;
+    }
+  } catch (err) {
+    console.log('[OpenAPI] Could not check for existing workflow, will try to create new one');
+  }
+
+  // Create new workflow
   try {
     const fetchResponse = await fetch(`${api}/workflows`, {
       method: 'POST',
@@ -304,9 +431,93 @@ async function saveWorkflow() {
       credentials: 'include',
       body: JSON.stringify({
         orgId: props.orgId,
-        name: apiInfo.value?.title || 'Generated API Agent',
+        name: baseName,
         description: `Auto-generated from OpenAPI spec: ${apiInfo.value?.title} (${apiInfo.value?.version})`,
         yamlConfig: generatedWorkflow.value,
+      }),
+    });
+
+    const response = await fetchResponse.json();
+
+    if (!fetchResponse.ok) {
+      // If duplicate error, try with timestamp suffix
+      if (response.message?.includes('duplicate') || response.error?.includes('duplicate') || 
+          response.message?.includes('already exists') || response.error?.includes('already exists')) {
+        const timestamp = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        const uniqueName = `${baseName} (${timestamp})`;
+        
+        const retryResponse = await fetch(`${api}/workflows`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            orgId: props.orgId,
+            name: uniqueName,
+            description: `Auto-generated from OpenAPI spec: ${apiInfo.value?.title} (${apiInfo.value?.version})`,
+            yamlConfig: generatedWorkflow.value,
+          }),
+        });
+        
+        const retryData = await retryResponse.json();
+        if (!retryResponse.ok) {
+          throw new Error(retryData.message || retryData.error || 'Failed to save workflow');
+        }
+        
+        savedWorkflowId.value = retryData.workflow.id;
+        toast.success('✅ Workflow saved! Now let\'s run it.', 2000);
+        proceedToRunStep();
+        return;
+      }
+      
+      throw new Error(response.message || response.error || `Server returned ${fetchResponse.status}`);
+    }
+
+    if (response.workflow) {
+      savedWorkflowId.value = response.workflow.id;
+      toast.success('✅ Workflow saved! Now let\'s run it.', 2000);
+      proceedToRunStep();
+    } else {
+      throw new Error('No workflow returned from server');
+    }
+  } catch (err: any) {
+    console.error('[OpenAPI] Save error full:', err);
+    const errorMessage = err.message || 'Failed to save workflow';
+    error.value = errorMessage;
+    toast.error(`❌ ${errorMessage}`, 5000);
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+function proceedToRunStep() {
+  step.value = 'run';
+  
+  // Pre-populate task input with a helpful example
+  const name = (apiInfo.value?.title || '').toLowerCase();
+  if (name.includes('stripe')) {
+    taskInput.value = 'Create customer john@example.com';
+  } else if (name.includes('github')) {
+    taskInput.value = 'List my repositories';
+  } else {
+    taskInput.value = 'List all resources';
+  }
+}
+
+async function runWorkflow() {
+  if (!savedWorkflowId.value || !taskInput.value.trim()) return;
+  
+  isRunning.value = true;
+  error.value = null;
+
+  try {
+    const fetchResponse = await fetch(`${api}/workflows/${savedWorkflowId.value}/run`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        task: taskInput.value.trim(),
       }),
     });
 
@@ -316,26 +527,34 @@ async function saveWorkflow() {
       throw new Error(response.message || response.error || `Server returned ${fetchResponse.status}`);
     }
 
-    if (response.workflow) {
-      emit('saved', response.workflow.id);
+    if (response.taskId) {
+      toast.success('🚀 Agent running! Opening trace view...', 2000);
+      emit('saved', savedWorkflowId.value);
+      
+      // Close modal and navigate to trace
       close();
+      
+      // Small delay to let the modal close, then navigate
+      setTimeout(() => {
+        window.location.href = `/?trace=${response.taskId}`;
+      }, 300);
     } else {
-      throw new Error('No workflow returned from server');
+      throw new Error('No taskId returned from server');
     }
   } catch (err: any) {
-    console.error('[OpenAPI] Save error full:', err);
-    const errorMessage = err.message || 'Failed to save workflow';
-    error.value = errorMessage;
-    
-    // Show user-friendly toast notification
-    if (errorMessage.includes('duplicate key') || errorMessage.includes('already exists')) {
-      toast.error('⚠️ A workflow with this name already exists. Please delete it first or rename this one.', 5000);
-    } else {
-      toast.error(`❌ ${errorMessage}`, 5000);
-    }
+    console.error('[OpenAPI] Run error:', err);
+    error.value = err.message || 'Failed to run workflow';
+    toast.error(`❌ ${error.value}`, 5000);
   } finally {
-    isLoading.value = false;
+    isRunning.value = false;
   }
+}
+
+function skipToWorkflows() {
+  if (savedWorkflowId.value) {
+    emit('saved', savedWorkflowId.value);
+  }
+  close();
 }
 
 function close() {
@@ -347,7 +566,41 @@ function close() {
     generatedWorkflow.value = '';
     apiInfo.value = null;
     error.value = null;
+    savedWorkflowId.value = null;
+    taskInput.value = '';
+    isRunning.value = false;
   }, 300);
+}
+
+function getExampleTasks(): string[] {
+  const name = (apiInfo.value?.title || '').toLowerCase();
+  
+  if (name.includes('stripe')) {
+    return [
+      'Create customer john@example.com',
+      'List all customers',
+      'Create $99 product',
+    ];
+  }
+  if (name.includes('github')) {
+    return [
+      'List my repositories',
+      'Get repo issues',
+      'Search code',
+    ];
+  }
+  if (name.includes('petstore') || name.includes('pet')) {
+    return [
+      'List available pets',
+      'Find pet by ID',
+      'Add new pet',
+    ];
+  }
+  return [
+    'List all resources',
+    'Get resource by ID',
+    'Create new resource',
+  ];
 }
 </script>
 
