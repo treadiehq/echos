@@ -1,6 +1,8 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Req, UseGuards, HttpException, HttpStatus, Inject } from '@nestjs/common';
+import { Throttle, SkipThrottle } from '@nestjs/throttler';
 import { WorkflowService } from './workflow.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
+import { CreateWorkflowDto, UpdateWorkflowDto, RunWorkflowDto } from './workflow.dto';
 import { Request } from 'express';
 
 @Controller('workflows')
@@ -8,9 +10,11 @@ import { Request } from 'express';
 export class WorkflowController {
   constructor(@Inject(WorkflowService) private readonly workflowService: WorkflowService) {}
 
+  // SECURITY: Stricter rate limit for workflow creation (expensive operation)
+  @Throttle({ default: { ttl: 60000, limit: 10 } }) // 10 per minute
   @Post()
   async createWorkflow(
-    @Body() body: { orgId: string; name: string; yamlConfig: string; description?: string },
+    @Body() body: CreateWorkflowDto,
     @Req() req: Request
   ) {
     if (!body.orgId || !body.name || !body.yamlConfig) {
@@ -65,10 +69,11 @@ export class WorkflowController {
     return { workflow };
   }
 
+  @Throttle({ default: { ttl: 60000, limit: 20 } }) // 20 per minute
   @Put(':workflowId')
   async updateWorkflow(
     @Param('workflowId') workflowId: string,
-    @Body() body: { orgId?: string; name?: string; description?: string; yamlConfig?: string },
+    @Body() body: UpdateWorkflowDto,
     @Req() req: Request
   ) {
     const orgId = req.orgId || body.orgId;
@@ -166,10 +171,12 @@ export class WorkflowController {
    * Run a workflow with a given task
    * Returns trace info for real-time viewing
    */
+  // SECURITY: Very strict rate limit for workflow runs (expensive LLM calls)
+  @Throttle({ default: { ttl: 60000, limit: 5 } }) // 5 per minute max
   @Post(':workflowId/run')
   async runWorkflow(
     @Param('workflowId') workflowId: string,
-    @Body() body: { task: string; memory?: Record<string, unknown> },
+    @Body() body: RunWorkflowDto,
     @Req() req: Request
   ) {
     const orgId = req.orgId;

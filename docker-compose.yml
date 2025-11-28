@@ -51,16 +51,20 @@ services:
     image: postgres:15-alpine
     container_name: echos-postgres
     environment:
-      POSTGRES_DB: echos
-      POSTGRES_USER: echos
-      POSTGRES_PASSWORD: echos
+      POSTGRES_DB: ${POSTGRES_DB:-echos}
+      POSTGRES_USER: ${POSTGRES_USER:-echos}
+      # SECURITY: Use env var for password, don't commit defaults
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     ports:
-      - "5434:5432"  # PostgreSQL
+      # SECURITY: Only expose on localhost in production, or use internal network
+      - "${POSTGRES_HOST:-127.0.0.1}:5434:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     restart: unless-stopped
+    # SECURITY: Don't run as root
+    user: postgres
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U echos"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-echos}"]
       interval: 10s
       timeout: 5s
       retries: 5

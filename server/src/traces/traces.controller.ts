@@ -1,10 +1,12 @@
 import { Controller, Get, Post, Delete, Param, Body, Query, Req, Res, UseGuards, HttpException, HttpStatus, Inject } from '@nestjs/common';
+import { Throttle, SkipThrottle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import archiver from 'archiver';
 import { TracesService } from './traces.service';
 import { StreamTokenService } from './stream-token.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { Public } from '../auth/decorators/public.decorator';
+import { CreateTraceDto, ReplayTraceDto } from './traces.dto';
 
 @Controller('traces')
 @UseGuards(AuthGuard)
@@ -26,9 +28,11 @@ export class TracesController {
     return { traces };
   }
 
+  // SECURITY: Rate limit trace creation
+  @Throttle({ default: { ttl: 60000, limit: 30 } }) // 30 per minute
   @Post()
   async create(
-    @Body() body: { orgId?: string; workflowId?: string; workflowName?: string; data: any },
+    @Body() body: CreateTraceDto,
     @Req() req: Request
   ) {
     const orgId = req.orgId || body.orgId;
@@ -73,10 +77,12 @@ export class TracesController {
   }
 
   // Replay trace with modified configuration
+  // SECURITY: Very strict rate limit - replay is expensive (LLM calls)
+  @Throttle({ default: { ttl: 60000, limit: 3 } }) // 3 per minute
   @Post(':id/replay')
   async replay(
     @Param('id') id: string,
-    @Body() body: { workflowConfig: any },
+    @Body() body: ReplayTraceDto,
     @Req() req: Request
   ) {
     console.log('Replay endpoint hit:', { id, hasBody: !!body, hasWorkflowConfig: !!body?.workflowConfig });
@@ -107,6 +113,8 @@ export class TracesController {
     }
   }
 
+  // SECURITY: Rate limit SSE connections to prevent resource exhaustion
+  @Throttle({ default: { ttl: 60000, limit: 20 } }) // 20 per minute
   @Public() // Public but validated by token
   @Get(':id/stream')
   async stream(@Param('id') id: string, @Req() req: Request, @Res() res: Response) {

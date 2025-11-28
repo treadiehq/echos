@@ -1,5 +1,7 @@
 import { Controller, Post, Get, Body, Query, Res, Req, HttpException, HttpStatus, UseGuards, Inject } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
+import { MagicLinkDto, VerifyTokenDto } from './auth.dto';
 import { Response, Request } from 'express';
 import { AuthGuard } from './guards/auth.guard';
 
@@ -7,8 +9,10 @@ import { AuthGuard } from './guards/auth.guard';
 export class AuthController {
   constructor(@Inject(AuthService) private authService: AuthService) {}
 
+  // SECURITY: Strict rate limit to prevent email enumeration and spam
+  @Throttle({ default: { ttl: 60000, limit: 5 } }) // 5 per minute
   @Post('send-magic-link')
-  async sendMagicLink(@Body() body: { email: string; orgName?: string; isSignup?: boolean }) {
+  async sendMagicLink(@Body() body: MagicLinkDto) {
     if (!body.email || !this.isValidEmail(body.email)) {
       throw new HttpException('Valid email is required', HttpStatus.BAD_REQUEST);
     }
@@ -22,6 +26,14 @@ export class AuthController {
       const result = await this.authService.sendMagicLink(body.email, body.orgName, body.isSignup);
       return result;
     } catch (error) {
+      // SECURITY: Don't reveal if email exists or not (prevent enumeration)
+      // Always return success message to prevent timing attacks
+      if (process.env.NODE_ENV === 'production') {
+        return { 
+          success: true, 
+          message: 'If this email is registered, a magic link has been sent' 
+        };
+      }
       throw new HttpException(
         error instanceof Error ? error.message : 'Failed to send magic link',
         HttpStatus.INTERNAL_SERVER_ERROR
@@ -29,35 +41,37 @@ export class AuthController {
     }
   }
 
+  // SECURITY: Rate limit token verification to prevent brute force
+  @Throttle({ default: { ttl: 60000, limit: 10 } }) // 10 per minute
   @Get('verify')
   async verifyMagicLink(
     @Query('token') token: string,
     @Res() res: Response
   ) {
-    if (!token) {
-      throw new HttpException('Token is required', HttpStatus.BAD_REQUEST);
+    if (!token || token.length < 20 || token.length > 100) {
+      throw new HttpException('Invalid token format', HttpStatus.BAD_REQUEST);
     }
 
     try {
       const { user, sessionToken, isSignup } = await this.authService.verifyMagicLink(token);
 
-      // console.log('🔍 Verify debug:', { userId: user.id, email: user.email, isSignup });
+      const isProduction = process.env.NODE_ENV === 'production';
 
-      // Set cookie
+      // SECURITY: Set secure cookie with proper flags
       res.cookie('session_token', sessionToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        httpOnly: true,           // Prevent XSS access to cookie
+        secure: isProduction,     // HTTPS only in production
+        sameSite: 'lax',          // CSRF protection
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        path: '/',                // Available on all paths
+        ...(isProduction && { domain: process.env.COOKIE_DOMAIN }), // Set domain in production
       });
 
       // Redirect to app - onboarding for sign-ups, home for logins
       const redirectUrl = process.env.APP_URL || 'http://localhost:3000';
       if (isSignup) {
-        // console.log('✅ Redirecting to onboarding (sign-up)');
         res.redirect(`${redirectUrl}/onboarding`);
       } else {
-        // console.log('✅ Redirecting to home (login)');
         res.redirect(`${redirectUrl}?login=success`);
       }
     } catch (error) {

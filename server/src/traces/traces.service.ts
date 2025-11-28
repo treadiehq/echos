@@ -131,11 +131,14 @@ export class TracesService {
   }
 
   async deleteOldTraces(orgId: string, daysOld: number): Promise<number> {
+    // SECURITY: Validate daysOld to prevent injection
+    const safeDaysOld = Math.max(1, Math.min(365, Math.floor(daysOld)));
+    
     const result = await this.db.query(
       `DELETE FROM traces 
        WHERE org_id = $1 
-       AND created_at < NOW() - INTERVAL '${daysOld} days'`,
-      [orgId]
+       AND created_at < NOW() - INTERVAL '1 day' * $2`,
+      [orgId, safeDaysOld]
     );
 
     return result.rowCount || 0;

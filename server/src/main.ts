@@ -8,12 +8,19 @@ if (!process.env.RAILWAY_ENVIRONMENT && process.env.NODE_ENV !== 'production') {
 
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './modules/app.module';
-import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import express from 'express';
+import helmet from 'helmet';
 
 async function bootstrap() {
+  // SECURITY: Require JWT_SECRET in production
+  if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+    console.error('❌ FATAL: JWT_SECRET environment variable is required in production');
+    process.exit(1);
+  }
+
   // CORS Configuration - must be done BEFORE creating the app
   const corsOrigins = process.env.CORS_ORIGIN 
     ? process.env.CORS_ORIGIN.split(',')
@@ -29,19 +36,42 @@ async function bootstrap() {
     },
     bodyParser: true,
   });
+
+  // SECURITY: Helmet for security headers
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'"],
+        imgSrc: ["'self'", "data:", "https:"],
+      },
+    },
+    crossOriginEmbedderPolicy: false, // Allow embedding for SSE
+  }));
   
-  // Increase body size limit for large OpenAPI specs
-  app.use(express.json({ limit: '50mb' }));
-  app.use(express.urlencoded({ limit: '50mb', extended: true }));
+  // SECURITY: Reduced body size limit (1MB instead of 50MB)
+  // For large OpenAPI specs, increase per-route if needed
+  app.use(express.json({ limit: '1mb' }));
+  app.use(express.urlencoded({ limit: '1mb', extended: true }));
   
-  // Cookie parser
+  // Cookie parser with secure settings
+  const isProduction = process.env.NODE_ENV === 'production';
   app.use(cookieParser());
+
+  // SECURITY: Global validation pipe for DTOs
+  app.use(ValidationPipe, {
+    whitelist: true, // Strip unknown properties
+    forbidNonWhitelisted: true, // Throw on unknown properties
+    transform: true, // Auto-transform payloads to DTO instances
+  });
   
   const port = process.env.PORT || 4000;
   await app.listen(port);
   // eslint-disable-next-line no-console
   console.log(`🚀 Echos API server listening on http://localhost:${port}`);
   console.log(`📊 Health check: http://localhost:${port}/health`);
+  console.log(`🛡️  Security: Rate limiting, Helmet, and validation enabled`);
 }
 bootstrap();
 

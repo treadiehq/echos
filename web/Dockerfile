@@ -24,6 +24,10 @@ FROM node:20-slim AS runner
 
 WORKDIR /app
 
+# SECURITY: Create non-root user
+RUN groupadd --gid 1001 echos && \
+    useradd --uid 1001 --gid echos --shell /bin/bash --create-home echos
+
 # Runtime env
 ENV NODE_ENV=production
 # Nitro respects PORT and also NITRO_HOST/NITRO_PORT
@@ -32,6 +36,9 @@ ENV NITRO_HOST=0.0.0.0
 # Copy only the output and package files for Railway
 COPY --from=build /app/.output ./.output
 COPY --from=build /app/package*.json ./
+
+# SECURITY: Set proper ownership
+RUN chown -R echos:echos /app
 
 # Debug: Verify directory structure in runner
 RUN echo "=== RUNNER STAGE: Checking .output structure ===" && \
@@ -42,6 +49,9 @@ RUN echo "=== RUNNER STAGE: Checking .output structure ===" && \
     ls -la .output/server/chunks/public/ || echo "❌ .output/server/chunks/public NOT FOUND" && \
     echo "=== Checking for logo ===" && \
     find .output -name "logo.DeqhtZlg.png" || echo "❌ Logo NOT FOUND"
+
+# SECURITY: Switch to non-root user
+USER echos
 
 # Railway will provide PORT; expose a default for local runs
 EXPOSE 3000

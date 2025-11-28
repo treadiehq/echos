@@ -25,6 +25,10 @@ FROM node:18-slim
 
 WORKDIR /app
 
+# SECURITY: Create non-root user
+RUN groupadd --gid 1001 echos && \
+    useradd --uid 1001 --gid echos --shell /bin/bash --create-home echos
+
 # Install production dependencies only
 COPY package.json package-lock.json ./
 RUN npm ci --only=production
@@ -41,8 +45,14 @@ RUN cd server && npm ci --only=production
 COPY workflow.yaml ./
 COPY examples ./examples
 
-# Create traces directory
-RUN mkdir -p traces && chmod 777 traces
+# Create traces directory with proper ownership
+RUN mkdir -p traces && chown -R echos:echos traces
+
+# SECURITY: Set proper ownership
+RUN chown -R echos:echos /app
+
+# SECURITY: Switch to non-root user
+USER echos
 
 # Expose port (API server only in Docker)
 EXPOSE 4000

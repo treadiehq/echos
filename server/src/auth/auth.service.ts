@@ -39,10 +39,16 @@ export class AuthService {
       this.resend = new Resend(process.env.RESEND_API_KEY);
     }
 
-    this.jwtSecret = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-    
+    // SECURITY: JWT_SECRET is required - no fallback to prevent accidental insecure deployments
     if (!process.env.JWT_SECRET) {
-      console.warn('⚠️  JWT_SECRET not set, using default (not secure for production)');
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error('FATAL: JWT_SECRET environment variable is required in production');
+      }
+      // Development only: generate a random secret per-run (sessions won't persist across restarts)
+      this.jwtSecret = require('crypto').randomBytes(32).toString('hex');
+      console.warn('⚠️  JWT_SECRET not set - using random secret (sessions will not persist across restarts)');
+    } else {
+      this.jwtSecret = process.env.JWT_SECRET;
     }
   }
 

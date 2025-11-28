@@ -1,4 +1,5 @@
 import { Controller, Post, Body, UseGuards, HttpException, HttpStatus, Inject } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { OpenAPIParserService } from './openapi-parser.service';
 import { WorkflowGeneratorService } from './workflow-generator.service';
@@ -14,6 +15,8 @@ export class OpenAPIController {
   /**
    * Parse OpenAPI spec and return structured data
    */
+  // SECURITY: Rate limit parsing (can fetch external URLs)
+  @Throttle({ default: { ttl: 60000, limit: 10 } }) // 10 per minute
   @Post('parse')
   async parseSpec(@Body() body: { spec: string | object }) {
     try {
@@ -48,6 +51,8 @@ export class OpenAPIController {
   /**
    * Generate workflow YAML from OpenAPI spec
    */
+  // SECURITY: Rate limit generation
+  @Throttle({ default: { ttl: 60000, limit: 10 } }) // 10 per minute
   @Post('generate')
   async generateWorkflow(
     @Body()

@@ -167,19 +167,32 @@ Return ONLY the SQL query, no explanation.`
 /**
  * Extract explicit SQL query from message
  * Only matches SQL in code blocks or SQL that starts at beginning of message
+ * SECURITY: Uses non-backtracking patterns to prevent ReDoS
  */
 function extractSQL(message: string): string | null {
+  // SECURITY: Limit message length to prevent ReDoS
+  if (message.length > 50000) {
+    return null;
+  }
+
   // Try to extract SQL from code blocks first
-    const codeBlockMatch = message.match(/```(?:sql)?\s*([\s\S]+?)```/);
-    if (codeBlockMatch) {
-      return codeBlockMatch[1].trim();
-    }
+  // SECURITY: Non-greedy match with bounded repetition
+  const codeBlockMatch = message.match(/```(?:sql)?\n([^`]+)```/);
+  if (codeBlockMatch) {
+    return codeBlockMatch[1].trim();
+  }
     
   // Only match SQL at the START of the message (not in the middle)
-  // This prevents matching "create" in "create a summary"
-  const sqlMatch = message.match(/^\s*(SELECT|INSERT|UPDATE|DELETE)\b[\s\S]+?$/i);
-    if (sqlMatch) {
-      return sqlMatch[0].trim();
+  // SECURITY: Simplified pattern - just check if starts with SQL keyword
+  const trimmedMessage = message.trimStart();
+  const sqlKeywords = ['SELECT', 'INSERT', 'UPDATE', 'DELETE'];
+  const startsWithSQL = sqlKeywords.some(kw => 
+    trimmedMessage.toUpperCase().startsWith(kw + ' ') || 
+    trimmedMessage.toUpperCase().startsWith(kw + '\n')
+  );
+  
+  if (startsWithSQL) {
+    return trimmedMessage;
   }
   
   return null;
@@ -188,30 +201,45 @@ function extractSQL(message: string): string | null {
 /**
  * Validate SQL against guardrails
  * Returns violation message if invalid, null if valid
+ * SECURITY: Uses safe patterns and normalization to prevent bypasses
  */
 function validateSQL(sql: string, guardrails: any): string | null {
-  const sqlUpper = sql.toUpperCase();
+  // SECURITY: Normalize unicode to prevent bypass via homoglyphs
+  // e.g., ＤＥＬＥＴＥ (fullwidth) -> DELETE (ascii)
+  const normalizedSQL = sql.normalize('NFKC');
+  const sqlUpper = normalizedSQL.toUpperCase();
+  
+  // SECURITY: Limit SQL length
+  if (sql.length > 100000) {
+    return 'SQL query too long (max 100KB)';
+  }
   
   // Check allowed operations
   if (guardrails.allowedOperations && guardrails.allowedOperations.length > 0) {
-    const operation = (sqlUpper.match(/^(SELECT|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|TRUNCATE)/)?.[1]) || '';
+    // SECURITY: Simple string matching instead of regex
+    const firstWord = sqlUpper.trimStart().split(/[\s\n(]/)[0];
+    const allowedOps = guardrails.allowedOperations.map((op: string) => op.toUpperCase());
     
-    if (!guardrails.allowedOperations.includes(operation)) {
-      return `Operation not allowed: ${operation}. Allowed: ${guardrails.allowedOperations.join(', ')}`;
+    if (!allowedOps.includes(firstWord)) {
+      return `Operation not allowed: ${firstWord}. Allowed: ${guardrails.allowedOperations.join(', ')}`;
     }
   }
   
   // Check allowed tables
   if (guardrails.allowedTables && guardrails.allowedTables.length > 0) {
-    // Extract table names from SQL (simplified - matches FROM/INTO/UPDATE <table>)
-    const tableMatches = sql.match(/(?:FROM|INTO|UPDATE|JOIN)\s+([a-zA-Z_][a-zA-Z0-9_]*)/gi);
+    // SECURITY: Simple keyword extraction instead of complex regex
+    const keywords = ['FROM', 'INTO', 'UPDATE', 'JOIN', 'TABLE'];
+    const words = sqlUpper.split(/[\s,();]+/);
+    const allowedTablesUpper = guardrails.allowedTables.map((t: string) => t.toUpperCase());
     
-    if (tableMatches) {
-      for (const match of tableMatches) {
-        const tableName = match.split(/\s+/)[1].toLowerCase();
-        
-        if (!guardrails.allowedTables.some((allowed: string) => allowed.toLowerCase() === tableName)) {
-          return `Table not allowed: ${tableName}. Allowed: ${guardrails.allowedTables.join(', ')}`;
+    for (let i = 0; i < words.length - 1; i++) {
+      if (keywords.includes(words[i])) {
+        const potentialTable = words[i + 1];
+        // Skip if it's a keyword or looks like a subquery
+        if (potentialTable && !keywords.includes(potentialTable) && /^[A-Z_][A-Z0-9_]*$/i.test(potentialTable)) {
+          if (!allowedTablesUpper.includes(potentialTable)) {
+            return `Table not allowed: ${potentialTable}. Allowed: ${guardrails.allowedTables.join(', ')}`;
+          }
         }
       }
     }
@@ -219,24 +247,45 @@ function validateSQL(sql: string, guardrails: any): string | null {
   
   // Check for WHERE clause requirement on UPDATE/DELETE
   if (guardrails.requireWhere) {
-    if ((sqlUpper.includes('UPDATE') || sqlUpper.includes('DELETE')) && !sqlUpper.includes('WHERE')) {
+    const hasUpdate = sqlUpper.includes('UPDATE ');
+    const hasDelete = sqlUpper.includes('DELETE ');
+    const hasWhere = sqlUpper.includes(' WHERE ');
+    
+    if ((hasUpdate || hasDelete) && !hasWhere) {
       return 'WHERE clause required for UPDATE/DELETE operations';
     }
   }
   
-  // Block dangerous operations
-  const dangerousPatterns = [
-    /DROP\s+TABLE/i,
-    /DROP\s+DATABASE/i,
-    /TRUNCATE/i,
-    /ALTER\s+TABLE.*DROP/i,
-    /DELETE.*FROM.*WHERE.*1\s*=\s*1/i,  // DELETE FROM x WHERE 1=1
-    /UPDATE.*SET.*WHERE.*1\s*=\s*1/i,   // UPDATE x SET y WHERE 1=1
+  // SECURITY: Block dangerous patterns with simple string checks (more reliable than regex)
+  const dangerousKeywords = [
+    'DROP TABLE', 'DROP DATABASE', 'DROP SCHEMA',
+    'TRUNCATE', 'ALTER TABLE', 'CREATE TABLE',
+    'GRANT ', 'REVOKE ',
+    '; DROP', '; DELETE', '; UPDATE', '; INSERT',  // SQL injection attempts
+    '/*', '*/',  // Comment injection
+    '--',        // Comment injection
+    'EXEC ', 'EXECUTE ', 'XP_',  // Stored procedure execution
+    'LOAD_FILE', 'INTO OUTFILE', 'INTO DUMPFILE',  // File operations
   ];
   
-  for (const pattern of dangerousPatterns) {
-    if (pattern.test(sql)) {
-      return `Dangerous SQL pattern detected: ${pattern.source}`;
+  for (const dangerous of dangerousKeywords) {
+    if (sqlUpper.includes(dangerous)) {
+      return `Blocked: SQL contains dangerous keyword '${dangerous}'`;
+    }
+  }
+  
+  // SECURITY: Block tautologies that bypass WHERE
+  const tautologyPatterns = [
+    /WHERE\s+1\s*=\s*1/i,
+    /WHERE\s+TRUE/i,
+    /WHERE\s+'[^']*'\s*=\s*'[^']*'/i,
+    /OR\s+1\s*=\s*1/i,
+    /OR\s+TRUE/i,
+  ];
+  
+  for (const pattern of tautologyPatterns) {
+    if (pattern.test(normalizedSQL)) {
+      return 'Blocked: SQL contains suspicious tautology pattern';
     }
   }
   

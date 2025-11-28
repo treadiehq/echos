@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 
 export interface ParsedEndpoint {
   path: string;
@@ -37,21 +37,125 @@ export interface ParsedAPI {
   tags: Array<{ name: string; description?: string }>;
 }
 
+/**
+ * SECURITY: Check if hostname is a private/internal IP (SSRF protection)
+ */
+function isPrivateIP(hostname: string): boolean {
+  // Check for localhost
+  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') {
+    return true;
+  }
+  
+  // Check for private IP ranges
+  const privateRanges = [
+    /^10\./,                    // 10.0.0.0/8
+    /^172\.(1[6-9]|2[0-9]|3[01])\./, // 172.16.0.0/12
+    /^192\.168\./,              // 192.168.0.0/16
+    /^169\.254\./,              // 169.254.0.0/16 (link-local) - AWS metadata!
+    /^127\./,                   // 127.0.0.0/8 (loopback)
+    /^0\.0\.0\.0$/,             // 0.0.0.0
+    /^::1$/,                    // IPv6 loopback
+    /^fe80:/i,                  // IPv6 link-local
+    /^fc00:/i,                  // IPv6 private
+    /^fd00:/i,                  // IPv6 private
+  ];
+  
+  return privateRanges.some(range => range.test(hostname));
+}
+
+/**
+ * SECURITY: Validate URL is safe to fetch (SSRF protection)
+ */
+function validateUrl(urlString: string): URL {
+  // Limit URL length
+  if (urlString.length > 2048) {
+    throw new HttpException('URL too long (max 2048 characters)', HttpStatus.BAD_REQUEST);
+  }
+
+  let url: URL;
+  try {
+    url = new URL(urlString);
+  } catch {
+    throw new HttpException('Invalid URL format', HttpStatus.BAD_REQUEST);
+  }
+
+  // Only allow http/https
+  if (!['http:', 'https:'].includes(url.protocol)) {
+    throw new HttpException('Only HTTP/HTTPS URLs are allowed', HttpStatus.BAD_REQUEST);
+  }
+
+  // Block private IPs (SSRF protection)
+  if (isPrivateIP(url.hostname)) {
+    throw new HttpException(
+      'Private/internal URLs are not allowed for security reasons',
+      HttpStatus.FORBIDDEN
+    );
+  }
+
+  // Block cloud metadata endpoints specifically
+  const metadataPatterns = [
+    /^169\.254\.169\.254$/,     // AWS/GCP metadata
+    /^metadata\.google\.internal$/i,
+    /^metadata\.gcp\.internal$/i,
+    /^100\.100\.100\.200$/,     // Alibaba Cloud metadata
+  ];
+  
+  if (metadataPatterns.some(p => p.test(url.hostname))) {
+    throw new HttpException(
+      'Cloud metadata endpoints are blocked for security',
+      HttpStatus.FORBIDDEN
+    );
+  }
+
+  return url;
+}
+
 @Injectable()
 export class OpenAPIParserService {
   /**
    * Parse OpenAPI spec from URL or object
+   * SECURITY: Includes SSRF protection for URL fetching
    */
   async parseSpec(specInput: string | object): Promise<ParsedAPI> {
     let spec: any;
 
-    // Handle URL input
+    // Handle URL input with SSRF protection
     if (typeof specInput === 'string' && (specInput.startsWith('http://') || specInput.startsWith('https://'))) {
-      const response = await fetch(specInput);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch spec from URL: ${response.statusText}`);
+      // SECURITY: Validate URL before fetching
+      const validatedUrl = validateUrl(specInput);
+      
+      // Fetch with timeout to prevent slowloris attacks
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      try {
+        const response = await fetch(validatedUrl.toString(), {
+          signal: controller.signal,
+          headers: {
+            'User-Agent': 'Echos-OpenAPI-Parser/1.0',
+          },
+        });
+        
+        clearTimeout(timeout);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch spec from URL: ${response.statusText}`);
+        }
+        
+        // SECURITY: Limit response size (5MB max for OpenAPI specs)
+        const contentLength = response.headers.get('content-length');
+        if (contentLength && parseInt(contentLength) > 5 * 1024 * 1024) {
+          throw new HttpException('OpenAPI spec too large (max 5MB)', HttpStatus.BAD_REQUEST);
+        }
+        
+        spec = await response.json();
+      } catch (error: any) {
+        clearTimeout(timeout);
+        if (error.name === 'AbortError') {
+          throw new HttpException('Request timeout fetching OpenAPI spec', HttpStatus.REQUEST_TIMEOUT);
+        }
+        throw error;
       }
-      spec = await response.json();
     } else if (typeof specInput === 'string') {
       // Try parsing as JSON
       try {
