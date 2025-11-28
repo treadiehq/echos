@@ -60,11 +60,11 @@ async function bootstrap() {
   app.use(cookieParser());
 
   // SECURITY: Global validation pipe for DTOs
-  app.use(ValidationPipe, {
+  app.useGlobalPipes(new ValidationPipe({
     whitelist: true, // Strip unknown properties
     forbidNonWhitelisted: true, // Throw on unknown properties
     transform: true, // Auto-transform payloads to DTO instances
-  });
+  }));
   
   const port = process.env.PORT || 4000;
   await app.listen(port);
