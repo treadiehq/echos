@@ -9,8 +9,8 @@ web/.nuxt/
 web/public/workflows/
 *.tsbuildinfo
 
-# Runtime artifacts
-traces/
+# Runtime artifacts (trace output files, not source code)
+/traces/
 *.log
 *.log.*
 
