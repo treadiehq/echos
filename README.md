@@ -131,14 +131,14 @@ This is like Chrome DevTools time-travel debugging, but for AI agents.
 
 ## One-Click Agent from OpenAPI Spec
 
-** Paste any OpenAPI spec → instant production-ready agent.
+Paste any OpenAPI spec → instant production-ready agent.
 
 Click **"Generate from OpenAPI"** in the UI, paste a Stripe, GitHub, or any API spec, and get:
 
-- ✅ **Auto-configured guardrails** - Domain allowlisting, SSRF protection
-- ✅ **All endpoints mapped** - Complete API documentation in agent memory
-- ✅ **Auth detection** - Bearer, API Key, OAuth2 automatically configured
-- ✅ **Instant deployment** - Preview, customize, and save in seconds
+- **Auto-configured guardrails** - Domain allowlisting, SSRF protection
+- **All endpoints mapped** - Complete API documentation in agent memory
+- **Auth detection** - Bearer, API Key, OAuth2 automatically configured
+- **Instant deployment** - Preview, customize, and save in seconds
 
 **Example:**
 
